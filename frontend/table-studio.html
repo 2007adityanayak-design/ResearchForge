@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Studio | ResearchForge</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style2.css">
+    <link rel="stylesheet" href="css/style3.css">
+</head>
+<body class="table-studio-page">
+    <main class="table-studio-container">
+        <header class="table-studio-topbar">
+            <div class="table-studio-brand">
+                <a href="workspace.html" class="table-studio-back">← Back to Workspace</a>
+                <span class="table-studio-eyebrow">RESEARCHFORGE WORKSPACE</span>
+                <h1>Table Studio</h1>
+                <p>Create, customize, and organize research tables.</p>
+            </div>
+            <div class="table-studio-project">
+                <span>Current Project</span>
+                <strong id="table-studio-project-name">Loading project...</strong>
+            </div>
+        </header>
+
+    <section class="table-studio-workspace">
+        <aside class="table-studio-sidebar">
+            <div class="table-studio-section-heading">
+                <span class="table-studio-step">01</span>
+                <div>
+                    <h2>Table Details</h2>
+                    <p>Describe the table you need.</p>
+                </div>
+            </div>
+
+            <form id="table-studio-form">
+                <div class="table-studio-field">
+                    <label for="studio-table-description">Table Description</label>
+                    <textarea id="studio-table-description" rows="5" placeholder="Describe the data, columns, and information your table should contain."></textarea>
+                </div>
+
+                <div class="table-studio-field">
+                    <label for="studio-table-caption">Table Caption</label>
+                    <input type="text" id="studio-table-caption" maxlength="250" placeholder="e.g. Table 1: Experimental Results" required>
+                </div>
+
+                <div class="table-studio-field">
+                    <label for="studio-table-section">Document Section</label>
+                    <select id="studio-table-section">
+                        <option value="">General / Unassigned</option>
+                    </select>
+                </div>
+
+                <button type="button" id="studio-create-preview" class="table-studio-primary-btn">Create Preview</button>
+            </form>
+
+            <div class="table-studio-ai-card">
+                <div class="table-studio-ai-icon">✦</div>
+                <div>
+                    <h3>AI Table Assistant</h3>
+                    <p>Generate tables from descriptions and refine them using natural language.</p>
+                    <span class="table-studio-coming-soon">AI integration coming next</span>
+                </div>
+            </div>
+        </aside>
+
+        <section class="table-studio-editor">
+            <div class="table-studio-editor-header">
+                <div>
+                    <span class="table-studio-eyebrow">TABLE EDITOR</span>
+                    <h2>Table Preview</h2>
+                    <p>Edit your cells directly before saving.</p>
+                </div>
+                <span class="table-studio-status" id="studio-table-status">Unsaved changes</span>
+            </div>
+
+            <div class="table-studio-toolbar">
+                <button type="button" id="studio-add-row">＋ Add Row</button>
+                <button type="button" id="studio-add-column">＋ Add Column</button>
+                <button type="button" id="studio-remove-row">− Remove Row</button>
+                <button type="button" id="studio-remove-column">− Remove Column</button>
+            </div>
+
+            <div class="table-studio-preview" id="studio-table-preview">
+                <div class="table-studio-empty-preview">
+                    <div class="table-studio-empty-icon">▦</div>
+                    <h3>Your table will appear here</h3>
+                    <p>Enter a description and select Create Preview to get started.</p>
+                </div>
+            </div>
+
+            <div class="table-studio-editor-footer">
+                <button type="button" id="studio-reset-table" class="table-studio-secondary-btn">Reset</button>
+                <button type="button" id="studio-save-table" class="table-studio-primary-btn">Save Table</button>
+            </div>
+
+            <p class="table-studio-feedback" id="studio-table-feedback" role="status" aria-live="polite"></p>
+        </section>
+    </section>
+
+    <section class="table-studio-saved-section">
+        <div class="table-studio-saved-header">
+            <div>
+                <span class="table-studio-eyebrow">YOUR RESEARCH DATA</span>
+                <h2>Existing Tables</h2>
+                <p>Manage the tables saved to your current project.</p>
+            </div>
+            <span class="table-studio-count" id="studio-table-count">0 tables</span>
+        </div>
+
+        <div class="table-studio-saved-list" id="studio-saved-tables">
+            <div class="table-studio-empty-saved">
+                Your saved tables will appear here.
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="js/table-studio.js"></script>
+
+
+</body>
+</html>

@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create a new academic document or prepare to convert existing research material with ResearchForge.">
+    <title>Create Document | ResearchForge</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="project-page">
+
+    <header class="project-topbar">
+        <a href="index.html" class="sidebar-brand">
+            <span class="brand-mark">R</span>
+            <span class="brand-name">ResearchForge</span>
+        </a>
+        <a href="dashboard.html" class="project-back-link">
+            <span>←</span>
+            Back to workspace
+        </a>
+    </header>
+
+    <main class="project-main">
+        <div class="project-layout">
+
+            <section class="project-form-panel">
+
+                <div class="project-breadcrumb">
+                    <a href="dashboard.html">My Projects</a>
+                    <span>/</span>
+                    <span>New Document</span>
+                </div>
+
+                <div class="project-heading">
+                    <div class="project-heading-icon">＋</div>
+                    <p class="page-eyebrow">GET STARTED</p>
+                    <h1>Create a new document</h1>
+                    <p class="project-description">
+                        Choose what you're working on, select a suitable
+                        format, and set up your academic workspace.
+                    </p>
+                </div>
+
+                <form id="project-form" class="project-form">
+
+                    <div class="form-group">
+                        <label for="document-mode">
+                            How would you like to begin?
+                            <span class="required-mark">*</span>
+                        </label>
+                        <select id="document-mode" name="document_mode" required>
+                            <option value="new" selected>Create a new document</option>
+                            <option value="convert">Work with existing research material</option>
+                        </select>
+                        <div class="input-helper">
+                            <span>Choose whether to start fresh or work from existing material.</span>
+                        </div>
+                    </div>
+
+                    <div id="existing-material-notice" class="project-next-step" hidden>
+                        <div class="next-step-icon">↗</div>
+                        <div>
+                            <h3>Start with your existing material</h3>
+                            <p>
+                                Create the destination document first. You can then
+                                add your existing content in the workspace. File
+                                importing and automatic conversion will be added
+                                separately.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="document-type">
+                            What do you want to create?
+                            <span class="required-mark">*</span>
+                        </label>
+                        <select id="document-type" name="document_type" required>
+                            <option value="" selected disabled>Select document type</option>
+                            <option value="project_report">Project Report</option>
+                            <option value="research_paper">Research Paper</option>
+                            <option value="review_paper">Review Paper</option>
+                            <option value="thesis">Thesis / Dissertation</option>
+                            <option value="academic_report">General Academic Report</option>
+                        </select>
+                        <div class="input-helper">
+                            <span>Choose the type that matches your intended document.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="format-style">
+                            Formatting style
+                            <span class="required-mark">*</span>
+                        </label>
+                        <select id="format-style" name="format_style" required disabled>
+                            <option value="" selected disabled>Choose a document type first</option>
+                        </select>
+                        <div class="input-helper">
+                            <span id="format-helper">Available formats will depend on your document type.</span>
+                        </div>
+                    </div>
+
+                    <div class="project-form-divider"></div>
+
+                    <div class="form-group">
+                        <label for="project-name">
+                            Document title
+                            <span class="required-mark">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="project-name"
+                            name="project_name"
+                            placeholder="e.g. Smart Air Purification using TiO₂"
+                            maxlength="150"
+                            required
+                            autocomplete="off"
+                        >
+                        <div class="input-helper">
+                            <span>Enter a clear title for your document.</span>
+                            <span id="project-name-count">0/150</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="author-name">
+                            Author name(s)
+                            <span class="required-mark">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="author-name"
+                            name="author_name"
+                            placeholder="Enter author name(s)"
+                            maxlength="300"
+                            required
+                            autocomplete="name"
+                        >
+                        <div class="input-helper">
+                            <span>For multiple authors, separate names with commas.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="institution">Institution / College</label>
+                        <input
+                            type="text"
+                            id="institution"
+                            name="institution"
+                            placeholder="e.g. Your college or university"
+                            maxlength="200"
+                            autocomplete="organization"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <input
+                            type="text"
+                            id="department"
+                            name="department"
+                            placeholder="e.g. Information Science and Engineering"
+                            maxlength="150"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="supervisor">Guide / Supervisor</label>
+                        <input
+                            type="text"
+                            id="supervisor"
+                            name="supervisor"
+                            placeholder="Enter your guide's name (optional)"
+                            maxlength="200"
+                        >
+                    </div>
+
+                    <div class="project-form-divider"></div>
+
+                    <div class="project-next-step">
+                        <div class="next-step-icon">✓</div>
+                        <div>
+                            <h3>Your workspace, your document</h3>
+                            <p id="document-next-step">
+                                Your selected document type will determine
+                                the structure of your workspace. You can
+                                develop your document section by section.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="project-message" class="project-message" role="status" aria-live="polite"></div>
+
+                    <div class="project-actions">
+                        <a href="dashboard.html" class="project-cancel-btn">Cancel</a>
+                        <button type="submit" id="create-project-btn" class="project-submit-btn">
+                            <span>Create document</span>
+                            <span aria-hidden="true">→</span>
+                        </button>
+                    </div>
+
+                </form>
+
+            </section>
+
+            <aside class="project-info-panel">
+
+                <div class="project-info-content">
+
+                    <span class="info-panel-label">YOUR RESEARCH WORKSPACE</span>
+                    <h2>Every great piece of research starts somewhere.</h2>
+                    <p>
+                        Start with the right document structure and turn
+                        your ideas into organized academic work.
+                    </p>
+
+                    <div class="project-benefits">
+                        <div class="project-benefit">
+                            <span class="benefit-check">✓</span>
+                            <div>
+                                <h3>Choose your document</h3>
+                                <p>Create a report, research paper, review paper, or thesis.</p>
+                            </div>
+                        </div>
+                        <div class="project-benefit">
+                            <span class="benefit-check">✓</span>
+                            <div>
+                                <h3>Use the right format</h3>
+                                <p>Select a suitable academic formatting style.</p>
+                            </div>
+                        </div>
+                        <div class="project-benefit">
+                            <span class="benefit-check">✓</span>
+                            <div>
+                                <h3>Keep everything organized</h3>
+                                <p>Build your document in a dedicated workspace.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="project-info-footer">
+                    ResearchForge <span>·</span> Built for academic work
+                </div>
+
+            </aside>
+
+        </div>
+    </main>
+
+    <script src="js/project.js"></script>
+
+</body>
+
+</html>

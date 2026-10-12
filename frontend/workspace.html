@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Organize, edit, and develop academic documents in your ResearchForge workspace.">
+    <title>Document Workspace | ResearchForge</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style2.css">
+    <link rel="stylesheet" href="css/style3.css">
+</head>
+
+<body class="workspace-page">
+
+    <header class="workspace-header">
+        <a href="dashboard.html" class="workspace-brand">ResearchForge</a>
+        <div class="workspace-header-actions">
+            <span id="workspace-save-status" role="status" aria-live="polite">Loading document...</span>
+            <a href="dashboard.html" class="workspace-back-btn">← Back to Dashboard</a>
+        </div>
+    </header>
+
+    <main class="workspace-main">
+
+        <section class="workspace-heading">
+            <p class="workspace-eyebrow" id="workspace-document-label">DOCUMENT WORKSPACE</p>
+            <h1 id="workspace-project-name">Loading document...</h1>
+            <p id="workspace-project-id">Retrieving document information</p>
+        </section>
+
+        <section class="workspace-status-card">
+            <div class="workspace-status-icon">R</div>
+            <div>
+                <h2 id="workspace-welcome-heading">Your document workspace</h2>
+                <p id="workspace-welcome-description">
+                    Your workspace is ready to help you organize and develop your academic work.
+                </p>
+            </div>
+        </section>
+
+        <section class="workspace-section" id="document-information-section">
+            <div class="workspace-section-heading">
+                <div>
+                    <h2>Document Information</h2>
+                    <p>Details and formatting selected during document creation.</p>
+                </div>
+            </div>
+
+            <div class="document-information-grid">
+                <div class="document-information-item">
+                    <span class="document-information-label">Document Type</span>
+                    <p id="workspace-document-type">Loading...</p>
+                </div>
+
+                <div class="document-information-item">
+                    <span class="document-information-label">Formatting Style</span>
+                    <p id="workspace-format-style">Loading...</p>
+                </div>
+
+                <div class="document-information-item">
+                    <span class="document-information-label">Author(s)</span>
+                    <p id="workspace-author-name">Loading...</p>
+                </div>
+
+                <div class="document-information-item">
+                    <span class="document-information-label">Institution</span>
+                    <p id="workspace-institution">Not provided</p>
+                </div>
+
+                <div class="document-information-item">
+                    <span class="document-information-label">Department</span>
+                    <p id="workspace-department">Not provided</p>
+                </div>
+
+                <div class="document-information-item">
+                    <span class="document-information-label">Guide / Supervisor</span>
+                    <p id="workspace-supervisor">Not provided</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="workspace-section" id="document-structure-section">
+            <div class="workspace-section-heading">
+                <div>
+                    <h2 id="document-structure-heading">Document Structure</h2>
+                    <p id="document-structure-description">
+                        Your document sections will appear here.
+                    </p>
+                </div>
+            </div>
+
+            <div id="document-sections-container" class="document-sections-container">
+                <div class="document-sections-placeholder">
+                    <h3>Preparing your document structure</h3>
+                    <p>Your document sections will be organized according to the selected document type.</p>
+                </div>
+            </div>
+
+            <div id="document-section-workspace-layout" class="document-section-workspace-layout" hidden>
+                <aside id="document-section-sidebar" class="document-section-sidebar">
+                    <div class="document-section-sidebar-heading">
+                        <h3>All Sections</h3>
+                        <p>Navigate through your document.</p>
+                    </div>
+
+                    <nav id="document-section-sidebar-list" class="document-section-sidebar-list"
+                        aria-label="Document section navigation">
+                    </nav>
+                </aside>
+
+                <div id="document-section-editor-container" class="document-section-editor-container">
+                </div>
+            </div>
+        </section>
+
+        <section class="workspace-section" id="document-materials-section">
+            <div class="workspace-section-heading">
+                <div>
+                    <h2>Figures and Tables</h2>
+                    <p>Manage supporting visuals and structured data for your document.</p>
+                </div>
+            </div>
+
+            <div class="workspace-materials-grid">
+
+                <article class="workspace-material-card">
+                    <div>
+                        <h3>Figures and Images</h3>
+                        <p>Add images, diagrams, charts, and captions to the relevant document sections.</p>
+                    </div>
+
+                    <button type="button" id="open-figures-btn" class="workspace-action-btn">
+                        Manage Figures
+                    </button>
+
+                    <div id="figures-summary" class="workspace-material-summary">
+                        Figures will appear here.
+                    </div>
+                    <div id="figures-manager-container"></div>
+                </article>
+
+                <article class="workspace-material-card">
+                    <div>
+                        <h3>Tables</h3>
+                        <p>Create structured tables, add captions, and associate them with document sections.</p>
+                    </div>
+
+                    <button type="button" id="open-tables-btn" class="workspace-action-btn">
+                        Manage Tables
+                    </button>
+
+                    <div id="tables-summary" class="workspace-material-summary">
+                        Tables will appear here.
+                    </div>
+
+                    <div id="tables-manager-container"></div>
+                </article>
+
+            </div>
+        </section>
+
+        <section class="workspace-section" id="figure-manager-section" hidden>
+            <div class="workspace-section-heading">
+                <div>
+                    <h2>Figure Manager</h2>
+                    <p>Upload images or use image URLs to manage figures in your document.</p>
+                </div>
+
+                <button type="button" id="close-figure-manager-btn" class="workspace-action-btn">
+                    Close Manager
+                </button>
+            </div>
+
+            <div class="figure-manager-layout">
+                <form id="figure-form" class="figure-form">
+                    <h3 id="figure-form-heading">Add a Figure</h3>
+
+                    <div class="figure-form-field">
+                        <label for="figure-caption">Figure Caption</label>
+                        <input type="text" id="figure-caption" maxlength="250" placeholder="Enter figure caption"
+                            required>
+                    </div>
+
+                    <div class="figure-form-field">
+                        <label for="figure-image-file">Upload Image</label>
+                        <input type="file" id="figure-image-file" accept="image/jpeg,image/png,image/webp,image/gif">
+                        <small>JPG, PNG, WEBP, or GIF. Maximum size: 5 MB.</small>
+                    </div>
+
+                    <div class="figure-form-divider">OR</div>
+
+                    <div class="figure-form-field">
+                        <label for="figure-image-url">Image URL</label>
+                        <input type="url" id="figure-image-url" placeholder="https://example.com/image.png">
+                    </div>
+
+                    <div id="figure-image-preview-container" class="figure-image-preview-container" hidden>
+                        <p>Image Preview</p>
+                        <img id="figure-image-preview" src="" alt="Figure preview">
+                    </div>
+
+                    <div class="figure-form-field">
+                        <label for="figure-section">Document Section</label>
+                        <select id="figure-section">
+                            <option value="">No section selected</option>
+                        </select>
+                    </div>
+
+                    <div id="figure-form-error" class="figure-form-error" hidden></div>
+
+                    <div class="figure-form-actions">
+                        <button type="submit" id="save-figure-btn" class="workspace-action-btn">
+                            Add Figure
+                        </button>
+
+                        <button type="button" id="cancel-figure-edit-btn" class="figure-secondary-btn" hidden>
+                            Cancel Edit
+                        </button>
+                    </div>
+                </form>
+
+                <div class="figure-list-panel">
+                    <div class="figure-list-heading">
+                        <div>
+                            <h3>Your Figures</h3>
+                            <p>View and manage the figures saved in this document.</p>
+                        </div>
+
+                        <span id="figure-count" class="figure-count">0 figures</span>
+                    </div>
+
+                    <div id="figure-list" class="figure-list">
+                        <div class="figure-empty-state">
+                            <h4>No figures added yet</h4>
+                            <p>Add a figure using the form to see it here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+        <section class="workspace-section" id="existing-material-section" hidden>
+            <div class="workspace-section-heading">
+                <div>
+                    <h2>Existing Research Material</h2>
+                    <p>Prepare to bring existing research into this document.</p>
+                </div>
+            </div>
+
+            <div class="existing-material-panel">
+                <h3>Continue from your existing work</h3>
+                <p>
+                    File importing and document conversion are not available yet.
+                    This area will support adding existing documents and organizing
+                    their content into your selected document type.
+                </p>
+            </div>
+        </section>
+
+        <section id="workspace-error" class="workspace-error" hidden>
+            <h2>Unable to open document</h2>
+            <p id="workspace-error-message">Please try again.</p>
+            <a href="dashboard.html" class="workspace-back-btn">Return to Dashboard</a>
+        </section>
+
+    </main>
+
+    <script src="js/workspace.js"></script>
+    <script src="js/workspace2.js"></script>
+
+</body>
+
+</html>

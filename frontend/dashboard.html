@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manage academic projects, create research documents, and organize existing research with ResearchForge.">
+    <title>My Workspace | ResearchForge</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="dashboard-page">
+
+    <div class="app-shell">
+
+        <aside class="sidebar">
+            <a href="index.html" class="sidebar-brand">
+                <span class="brand-mark">R</span>
+                <span class="brand-name">ResearchForge</span>
+            </a>
+
+            <div class="sidebar-section">
+                <p class="sidebar-label">WORKSPACE</p>
+                <a href="dashboard.html" class="sidebar-link active">
+                    <span class="sidebar-icon">⌂</span>
+                    <span>My Projects</span>
+                </a>
+                <a href="project.html" class="sidebar-link">
+                    <span class="sidebar-icon">＋</span>
+                    <span>Create Document</span>
+                </a>
+                <a href="#" class="sidebar-link" data-coming-soon>
+                    <span>▧</span>
+                    Report Templates
+                </a>
+                <a href="#" class="sidebar-link" data-coming-soon>
+                    <span>▤</span>
+                    Research Templates
+                </a>
+            </div>
+
+            <div class="sidebar-section sidebar-tools">
+                <p class="sidebar-label">TOOLS</p>
+                <a href="#" class="sidebar-link" data-coming-soon>
+                    <span class="sidebar-icon">▤</span>
+                    <span>Documents</span>
+                    <span class="coming-soon-badge">Soon</span>
+                </a>
+                <a href="#" class="sidebar-link" data-coming-soon>
+                    <span class="sidebar-icon">⌕</span>
+                    <span>Research Library</span>
+                    <span class="coming-soon-badge">Soon</span>
+                </a>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-help">
+                    <div class="help-icon">?</div>
+                    <div>
+                        <h4>Need a hand?</h4>
+                        <p>Your research journey starts here.</p>
+                    </div>
+                </div>
+                <a href="index.html" class="sidebar-home-link">← Back to home</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+                <div class="breadcrumb">
+                    <span>Workspace</span>
+                    <span class="breadcrumb-divider">/</span>
+                    <strong>My Projects</strong>
+                </div>
+                <div class="topbar-actions">
+                    <span class="workspace-status">
+                        <span class="status-dot"></span>
+                        Personal workspace
+                    </span>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+
+                <section class="dashboard-welcome">
+                    <div class="welcome-copy">
+                        <p class="page-eyebrow">YOUR RESEARCH SPACE</p>
+                        <h1>Good to see you.</h1>
+                        <p>
+                            Keep your ideas organized and turn your research
+                            into something meaningful.
+                        </p>
+                    </div>
+                    <a href="project.html" class="dashboard-primary-btn">
+                        <span>＋</span>
+                        Create a project
+                    </a>
+                </section>
+
+                <section class="dashboard-stats">
+                    <article class="stat-card">
+                        <div class="stat-card-top">
+                            <span class="stat-label">Total projects</span>
+                            <span class="stat-icon stat-icon-blue">▦</span>
+                        </div>
+                        <div class="stat-value" id="project-count">0</div>
+                        <p class="stat-description">Projects in your workspace</p>
+                    </article>
+
+                    <article class="stat-card">
+                        <div class="stat-card-top">
+                            <span class="stat-label">Your workspace</span>
+                            <span class="stat-icon stat-icon-green">✓</span>
+                        </div>
+                        <div class="stat-value stat-value-text">Organized</div>
+                        <p class="stat-description">Your projects, all in one place</p>
+                    </article>
+
+                    <article class="stat-card">
+                        <div class="stat-card-top">
+                            <span class="stat-label">Next step</span>
+                            <span class="stat-icon stat-icon-orange">↗</span>
+                        </div>
+                        <div class="stat-value stat-value-text">Keep creating</div>
+                        <p class="stat-description">Start with your next research idea</p>
+                    </article>
+                </section>
+
+                <section class="projects-section">
+
+                    <div class="projects-heading">
+                        <div>
+                            <h2>All projects</h2>
+                            <p>Access and manage your research projects.</p>
+                        </div>
+                    </div>
+
+                    <div class="projects-toolbar">
+                        <div class="project-search">
+                            <span class="search-icon">⌕</span>
+                            <input
+                                type="search"
+                                id="project-search"
+                                placeholder="Search your projects..."
+                                aria-label="Search projects"
+                            >
+                            <span class="search-shortcut">Search</span>
+                        </div>
+                        <div class="projects-sort">
+                            <span id="project-results-label">Your projects</span>
+                        </div>
+                    </div>
+
+                    <div id="projects-container" class="projects-grid">
+                        <div class="projects-loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading your projects...</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-footer">
+                        <span>ResearchForge Workspace</span>
+                        <span>Your research, organized.</span>
+                    </div>
+
+                </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <div id="delete-modal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+            <div class="modal-icon">!</div>
+            <h2 id="delete-modal-title">Delete this project?</h2>
+            <p>
+                This action cannot be undone. The project will be removed
+                from your workspace.
+            </p>
+            <div class="modal-actions">
+                <button type="button" id="cancel-delete" class="modal-cancel-btn">Keep project</button>
+                <button type="button" id="confirm-delete" class="modal-delete-btn">Delete project</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <script src="js/dashboard.js"></script>
+
+</body>
+
+</html>
+
