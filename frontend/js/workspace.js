@@ -217,16 +217,16 @@ function initializeWorkspace() {
 
     currentProjectId = Number(id);
 
-   if (tablesButton) {
-    tablesButton.addEventListener("click", () => {
-        if (!currentProjectId) {
-            alert("No document is selected.");
-            return;
-        }
+    if (tablesButton) {
+        tablesButton.addEventListener("click", () => {
+            if (!currentProjectId) {
+                alert("No document is selected.");
+                return;
+            }
 
-        window.location.href = `table-studio.html?id=${encodeURIComponent(currentProjectId)}`;
-    });
-}
+            window.location.href = `table-studio.html?id=${encodeURIComponent(currentProjectId)}`;
+        });
+    }
     loadResearch();
 }
 
@@ -1844,12 +1844,12 @@ function manageTables() {
                     <h4>${escapeHTML(table.caption || `Table ${index + 1}`)}</h4>
                     <p>${escapeHTML(table.section || "General / Unassigned")}</p>
                     <small>${escapeHTML(
-                        typeof table.content === "string"
-                            ? table.content.startsWith("{")
-                                ? "Structured research table"
-                                : table.content.slice(0, 160)
-                            : "Research table"
-                    )}</small>
+            typeof table.content === "string"
+                ? table.content.startsWith("{")
+                    ? "Structured research table"
+                    : table.content.slice(0, 160)
+                : "Research table"
+        )}</small>
                 </div>
                 <div class="table-manager-actions">
                     <button type="button" class="workspace-action-btn" data-edit-table="${index}">Edit</button>
@@ -1915,8 +1915,8 @@ function manageTables() {
                     return;
                 }
 
-                const confirmed = window.confirm(
-                    `Are you sure you want to delete "${table.caption || "this table"}"?`
+                const confirmed = await showTableDeleteModal(
+                    table.caption || "this table"
                 );
 
                 if (!confirmed) {

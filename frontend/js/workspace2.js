@@ -784,3 +784,4 @@ async function deleteFigure(index, deleteButton) {
 }
 
 document.addEventListener("DOMContentLoaded", initializeFiguresManager);
+

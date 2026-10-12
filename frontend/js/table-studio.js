@@ -343,7 +343,11 @@ function tableStudioRenderSavedTables() {
                 return;
             }
 
-            if (!window.confirm(`Delete "${table.caption || "this table"}"?`)) {
+            const confirmed = await showTableDeleteModal(
+                table.caption || "this table"
+            );
+
+            if (!confirmed) {
                 return;
             }
 
@@ -577,3 +581,182 @@ async function tableStudioInitialize() {
 }
 
 tableStudioInitialize();
+
+function showTableDeleteModal(tableCaption) {
+    return new Promise(resolve => {
+        const overlay = document.createElement("div");
+
+        Object.assign(overlay.style, {
+            position: "fixed",
+            inset: "0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+            background: "rgba(20, 38, 29, 0.65)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            zIndex: "999999",
+            opacity: "0",
+            transition: "opacity 180ms ease",
+            boxSizing: "border-box"
+        });
+
+        const modal = document.createElement("div");
+
+        Object.assign(modal.style, {
+            width: "100%",
+            maxWidth: "420px",
+            padding: "28px",
+            borderRadius: "18px",
+            border: "1px solid #c7d5ca",
+            background: "#f8faf8",
+            boxShadow: "0 24px 65px rgba(15, 35, 23, 0.3)",
+            fontFamily: "inherit",
+            boxSizing: "border-box",
+            transform: "translateY(12px) scale(0.97)",
+            transition: "transform 200ms ease"
+        });
+
+        const heading = document.createElement("h3");
+        heading.textContent = "Delete Table?";
+
+        Object.assign(heading.style, {
+            margin: "0 0 12px",
+            color: "#20372b",
+            fontSize: "21px",
+            fontWeight: "700"
+        });
+
+        const message = document.createElement("p");
+        message.textContent = `Are you sure you want to delete "${tableCaption}"? This action cannot be undone.`;
+
+        Object.assign(message.style, {
+            margin: "0 0 26px",
+            color: "#46594c",
+            fontSize: "14px",
+            lineHeight: "1.7",
+            overflowWrap: "anywhere"
+        });
+
+        const actions = document.createElement("div");
+
+        Object.assign(actions.style, {
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            flexWrap: "wrap"
+        });
+
+        const cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.textContent = "Cancel";
+
+        Object.assign(cancel.style, {
+            padding: "10px 19px",
+            border: "1px solid #9aafa0",
+            borderRadius: "9px",
+            background: "#e8eee9",
+            color: "#263d2e",
+            fontWeight: "600",
+            cursor: "pointer",
+            transition: "all 180ms ease",
+            boxShadow: "none"
+        });
+
+        const confirm = document.createElement("button");
+        confirm.type = "button";
+        confirm.textContent = "Delete";
+
+        Object.assign(confirm.style, {
+            padding: "10px 21px",
+            border: "1px solid #2f6b4c",
+            borderRadius: "9px",
+            background: "#367653",
+            color: "#ffffff",
+            fontWeight: "700",
+            cursor: "pointer",
+            transition: "all 180ms ease",
+            boxShadow: "none"
+        });
+
+        cancel.addEventListener("mouseenter", () => {
+            cancel.style.transform = "translateY(-3px) scale(1.05)";
+            cancel.style.boxShadow = "0 7px 20px rgba(54, 118, 83, 0.25)";
+        });
+
+        cancel.addEventListener("mouseleave", () => {
+            cancel.style.transform = "translateY(0) scale(1)";
+            cancel.style.boxShadow = "none";
+        });
+
+        confirm.addEventListener("mouseenter", () => {
+            confirm.style.transform = "translateY(-3px) scale(1.05)";
+            confirm.style.boxShadow = "0 7px 20px rgba(54, 118, 83, 0.3)";
+        });
+
+        confirm.addEventListener("mouseleave", () => {
+            confirm.style.transform = "translateY(0) scale(1)";
+            confirm.style.boxShadow = "none";
+        });
+
+        let closed = false;
+
+        function close(result) {
+            if (closed) {
+                return;
+            }
+
+            closed = true;
+            document.removeEventListener("keydown", onKeyDown);
+
+            cancel.disabled = true;
+            confirm.disabled = true;
+
+            overlay.style.opacity = "0";
+            modal.style.transform = "translateY(12px) scale(0.97)";
+
+            setTimeout(() => {
+                overlay.remove();
+                resolve(result);
+            }, 180);
+        }
+
+        function onKeyDown(event) {
+            if (event.key === "Escape") {
+                close(false);
+            }
+        }
+
+        cancel.addEventListener("click", event => {
+            event.preventDefault();
+            event.stopPropagation();
+            close(false);
+        });
+
+        confirm.addEventListener("click", event => {
+            event.preventDefault();
+            event.stopPropagation();
+            close(true);
+        });
+
+        overlay.addEventListener("click", event => {
+            if (event.target === overlay) {
+                close(false);
+            }
+        });
+
+        modal.append(heading, message);
+        actions.append(cancel, confirm);
+        modal.appendChild(actions);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        document.addEventListener("keydown", onKeyDown);
+
+        requestAnimationFrame(() => {
+            overlay.style.opacity = "1";
+            modal.style.transform = "translateY(0) scale(1)";
+        });
+    });
+}
