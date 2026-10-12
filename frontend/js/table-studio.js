@@ -57,7 +57,6 @@ async function tableStudioRequest(path, options = {}) {
     }
 
     return data;
-
 }
 
 function tableStudioMessage(text, isError = false) {
@@ -83,38 +82,41 @@ function tableStudioResetRows() {
 
     tableStudioRenderPreview();
     tableStudioSetStatus("Unsaved changes");
-
 }
 
 function tableStudioRenderPreview() {
     if (!tableStudioRows.length || !tableStudioRows[0]?.length) {
-        tableStudioPreview.innerHTML = `             <div class="table-studio-empty-preview">                 <h3>Your table will appear here</h3>                 <p>Create a preview to get started.</p>             </div>
+        tableStudioPreview.innerHTML = `
+            <div class="table-studio-empty-preview">
+                <h3>Your table will appear here</h3>
+                <p>Create a preview to get started.</p>
+            </div>
         `;
         return;
     }
 
     tableStudioPreview.innerHTML = `
-    <table class="table-studio-grid">
-        <tbody>
-            ${tableStudioRows.map((row, rowIndex) => `
-                <tr>
-                    ${row.map((cell, columnIndex) => `
-                        <td>
-                            <input
-                                type="text"
-                                value="${tableStudioEscape(cell)}"
-                                data-row="${rowIndex}"
-                                data-column="${columnIndex}"
-                                aria-label="Row ${rowIndex + 1}, column ${columnIndex + 1}"
-                                placeholder="${rowIndex === 0 ? `Column ${columnIndex + 1}` : "Enter value"}"
-                            >
-                        </td>
-                    `).join("")}
-                </tr>
-            `).join("")}
-        </tbody>
-    </table>
-`;
+        <table class="table-studio-grid">
+            <tbody>
+                ${tableStudioRows.map((row, rowIndex) => `
+                    <tr>
+                        ${row.map((cell, columnIndex) => `
+                            <td>
+                                <input
+                                    type="text"
+                                    value="${tableStudioEscape(cell)}"
+                                    data-row="${rowIndex}"
+                                    data-column="${columnIndex}"
+                                    aria-label="Row ${rowIndex + 1}, column ${columnIndex + 1}"
+                                    placeholder="${rowIndex === 0 ? `Column ${columnIndex + 1}` : "Enter value"}"
+                                >
+                            </td>
+                        `).join("")}
+                    </tr>
+                `).join("")}
+            </tbody>
+        </table>
+    `;
 
     tableStudioPreview.querySelectorAll("input").forEach(input => {
         input.addEventListener("input", event => {
@@ -125,23 +127,21 @@ function tableStudioRenderPreview() {
             tableStudioSetStatus("Unsaved changes");
         });
     });
-
 }
 
 function tableStudioRenderSections() {
     const currentValue = tableStudioSection.value;
 
     tableStudioSection.innerHTML = `
-    <option value="">General / Unassigned</option>
-    ${tableStudioSections.map(section => `
-        <option value="${tableStudioEscape(section)}">${tableStudioEscape(section)}</option>
-    `).join("")}
-`;
+        <option value="">General / Unassigned</option>
+        ${tableStudioSections.map(section => `
+            <option value="${tableStudioEscape(section)}">${tableStudioEscape(section)}</option>
+        `).join("")}
+    `;
 
     if (tableStudioSections.includes(currentValue)) {
         tableStudioSection.value = currentValue;
     }
-
 }
 
 function tableStudioParseRows(content) {
@@ -174,25 +174,47 @@ function tableStudioParseRows(content) {
     }
 
     return null;
-
 }
 
 async function tableStudioLoadProject() {
     if (!tableStudioProjectId || !/^\d+$/.test(tableStudioProjectId)) {
-        throw new Error("The project ID is missing or invalid. Return to your workspace and open Table Studio again.");
+        throw new Error(
+            "The project ID is missing or invalid. Return to your workspace and open Table Studio again."
+        );
     }
 
     const data = await tableStudioRequest(
         `/projects/${tableStudioProjectId}/research`
     );
 
-    const research = data.research || data.project || data;
+    const candidates = [
+        data?.project,
+        data?.research?.project,
+        data?.research,
+        data
+    ];
+
+    let projectName = "";
+
+    for (const candidate of candidates) {
+        if (!candidate || typeof candidate !== "object") {
+            continue;
+        }
+
+        projectName =
+            candidate.project_name ||
+            candidate.projectName ||
+            candidate.name ||
+            candidate.title ||
+            "";
+
+        if (projectName) {
+            break;
+        }
+    }
 
     tableStudioProjectName.textContent =
-        research.project_name ||
-        research.name ||
-        research.title ||
-        "Research Project";
+        projectName || `Project #${tableStudioProjectId}`;
 
     const workspaceLink = document.querySelector(".table-studio-back");
 
@@ -201,10 +223,12 @@ async function tableStudioLoadProject() {
             `workspace.html?id=${encodeURIComponent(tableStudioProjectId)}`;
     }
 
+    const research = data?.research || data?.project || data;
+
     const documentType =
-        research.document_type ||
-        research.documentType ||
-        data.document_type ||
+        research?.document_type ||
+        research?.documentType ||
+        data?.document_type ||
         "";
 
     if (documentType) {
@@ -216,11 +240,13 @@ async function tableStudioLoadProject() {
             const sections = sectionData.sections || sectionData;
 
             if (Array.isArray(sections)) {
-                tableStudioSections = sections.map(section =>
-                    typeof section === "string"
-                        ? section
-                        : section.name || section.title || ""
-                ).filter(Boolean);
+                tableStudioSections = sections
+                    .map(section =>
+                        typeof section === "string"
+                            ? section
+                            : section.name || section.title || ""
+                    )
+                    .filter(Boolean);
             }
         } catch (error) {
             console.warn("Unable to load document sections:", error);
@@ -228,7 +254,6 @@ async function tableStudioLoadProject() {
     }
 
     tableStudioRenderSections();
-
 }
 
 async function tableStudioLoadTables() {
@@ -245,7 +270,6 @@ async function tableStudioLoadTables() {
     );
 
     tableStudioRenderSavedTables();
-
 }
 
 function tableStudioRenderSavedTables() {
@@ -254,26 +278,26 @@ function tableStudioRenderSavedTables() {
 
     if (!tableStudioTables.length) {
         tableStudioSaved.innerHTML = `
-        <div class="table-studio-empty-saved">
-            No saved tables yet. Create your first table above.
-        </div>
-    `;
+            <div class="table-studio-empty-saved">
+                No saved tables yet. Create your first table above.
+            </div>
+        `;
         return;
     }
 
     tableStudioSaved.innerHTML = tableStudioTables.map((table, index) => `
-    <article class="table-studio-saved-item">
-        <div>
-            <h3>${tableStudioEscape(table.caption || `Table ${index + 1}`)}</h3>
-            <p>${tableStudioEscape(table.section || "General / Unassigned")}</p>
-            <small>${tableStudioEscape(table.description || "No description provided.")}</small>
-        </div>
-        <div class="table-studio-saved-actions">
-            <button type="button" data-studio-edit="${index}">Edit</button>
-            <button type="button" data-studio-delete="${index}">Delete</button>
-        </div>
-    </article>
-`).join("");
+        <article class="table-studio-saved-item">
+            <div>
+                <h3>${tableStudioEscape(table.caption || `Table ${index + 1}`)}</h3>
+                <p>${tableStudioEscape(table.section || "General / Unassigned")}</p>
+                <small>${tableStudioEscape(table.description || "No description provided.")}</small>
+            </div>
+            <div class="table-studio-saved-actions">
+                <button type="button" data-studio-edit="${index}">Edit</button>
+                <button type="button" data-studio-delete="${index}">Delete</button>
+            </div>
+        </article>
+    `).join("");
 
     tableStudioSaved.querySelectorAll("[data-studio-edit]").forEach(button => {
         button.addEventListener("click", () => {
@@ -338,11 +362,13 @@ function tableStudioRenderSavedTables() {
             } catch (error) {
                 tableStudioTables = previousTables;
                 tableStudioRenderSavedTables();
-                tableStudioMessage(`Unable to delete table: ${error.message}`, true);
+                tableStudioMessage(
+                    `Unable to delete table: ${error.message}`,
+                    true
+                );
             }
         });
     });
-
 }
 
 async function tableStudioSaveAll() {
@@ -396,13 +422,16 @@ document.getElementById("studio-add-row").addEventListener("click", () => {
     if (!tableStudioRows.length) {
         tableStudioRows = [[""]];
     } else {
-        const columnCount = Math.max(1, ...tableStudioRows.map(row => row.length));
+        const columnCount = Math.max(
+            1,
+            ...tableStudioRows.map(row => row.length)
+        );
+
         tableStudioRows.push(Array(columnCount).fill(""));
     }
 
     tableStudioRenderPreview();
     tableStudioSetStatus("Unsaved changes");
-
 });
 
 document.getElementById("studio-add-column").addEventListener("click", () => {
@@ -411,9 +440,9 @@ document.getElementById("studio-add-column").addEventListener("click", () => {
     }
 
     tableStudioRows = tableStudioRows.map(row => [...row, ""]);
+
     tableStudioRenderPreview();
     tableStudioSetStatus("Unsaved changes");
-
 });
 
 document.getElementById("studio-remove-row").addEventListener("click", () => {
@@ -421,14 +450,18 @@ document.getElementById("studio-remove-row").addEventListener("click", () => {
         tableStudioMessage("A table must contain at least one row.", true);
         return;
     }
+
     tableStudioRows.pop();
+
     tableStudioRenderPreview();
     tableStudioSetStatus("Unsaved changes");
-
 });
 
 document.getElementById("studio-remove-column").addEventListener("click", () => {
-    const columnCount = Math.max(0, ...tableStudioRows.map(row => row.length));
+    const columnCount = Math.max(
+        0,
+        ...tableStudioRows.map(row => row.length)
+    );
 
     if (columnCount <= 1) {
         tableStudioMessage("A table must contain at least one column.", true);
@@ -436,9 +469,9 @@ document.getElementById("studio-remove-column").addEventListener("click", () => 
     }
 
     tableStudioRows = tableStudioRows.map(row => row.slice(0, -1));
+
     tableStudioRenderPreview();
     tableStudioSetStatus("Unsaved changes");
-
 });
 
 document.getElementById("studio-reset-table").addEventListener("click", () => {
@@ -458,12 +491,18 @@ tableStudioSaveButton.addEventListener("click", async () => {
     }
 
     if (!tableStudioRows.length || !tableStudioRows[0]?.length) {
-        tableStudioMessage("Create a table with at least one row and one column.", true);
+        tableStudioMessage(
+            "Create a table with at least one row and one column.",
+            true
+        );
         return;
     }
 
     if (tableStudioRows.some(row => row.length !== tableStudioRows[0].length)) {
-        tableStudioMessage("Every row must have the same number of columns.", true);
+        tableStudioMessage(
+            "Every row must have the same number of columns.",
+            true
+        );
         return;
     }
 
@@ -495,4 +534,46 @@ tableStudioSaveButton.addEventListener("click", async () => {
     }
 
     tableStudioSaveButton.disabled = true;
-    t
+
+    try {
+        await tableStudioSaveAll();
+
+        tableStudioEditingId = null;
+
+        tableStudioRenderSavedTables();
+        tableStudioSetStatus("Saved successfully");
+        tableStudioMessage("Table saved successfully.");
+    } catch (error) {
+        tableStudioTables = previousTables;
+
+        tableStudioRenderSavedTables();
+        tableStudioSetStatus("Save failed");
+
+        tableStudioMessage(
+            `Unable to save table: ${error.message}`,
+            true
+        );
+    } finally {
+        tableStudioSaveButton.disabled = false;
+    }
+});
+
+async function tableStudioInitialize() {
+    try {
+        await tableStudioLoadProject();
+        await tableStudioLoadTables();
+    } catch (error) {
+        console.error("Table Studio initialization failed:", error);
+
+        if (tableStudioProjectName.textContent === "Loading project...") {
+            tableStudioProjectName.textContent = "Unable to load project";
+        }
+
+        tableStudioMessage(
+            `Unable to load the project: ${error.message}`,
+            true
+        );
+    }
+}
+
+tableStudioInitialize();

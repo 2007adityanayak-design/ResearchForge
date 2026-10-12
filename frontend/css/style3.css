@@ -988,3 +988,8 @@
         flex: 1;
     }
 }
+
+.table-studio-grid tr:first-child input::placeholder {
+    color: #ffffff;
+    opacity: 1;
+}
