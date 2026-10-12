@@ -227,6 +227,16 @@ function initializeWorkspace() {
             window.location.href = `table-studio.html?id=${encodeURIComponent(currentProjectId)}`;
         });
     }
+    if (figuresButton) {
+        figuresButton.addEventListener("click", () => {
+            if (!currentProjectId) {
+                alert("No document is selected.");
+                return;
+            }
+
+            window.location.href = `figure-studio.html?id=${encodeURIComponent(currentProjectId)}`;
+        });
+    }
     loadResearch();
 }
 

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Figure Studio | ResearchForge</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style2.css">
+    <link rel="stylesheet" href="css/style3.css">
+</head>
+<body class="figure-studio-page">
+    <main class="figure-studio-container">
+        <header class="figure-studio-topbar">
+            <div class="figure-studio-brand">
+                <a href="workspace.html" class="figure-studio-back">← Back to Workspace</a>
+                <span class="figure-studio-eyebrow">RESEARCHFORGE WORKSPACE</span>
+                <h1>Figure Studio</h1>
+                <p>Upload, preview, and organize research figures.</p>
+            </div>
+            <div class="figure-studio-project">
+                <span>Current Project</span>
+                <strong id="figure-studio-project-name">Loading project...</strong>
+            </div>
+        </header>
+
+
+    <section class="figure-studio-workspace">
+        <aside class="figure-studio-sidebar">
+            <div class="figure-studio-section-heading">
+                <span class="figure-studio-step">01</span>
+                <div>
+                    <h2>Figure Details</h2>
+                    <p>Add an image and its research information.</p>
+                </div>
+            </div>
+
+            <form id="figure-studio-form">
+                <div class="figure-studio-field">
+                    <label for="studio-figure-image">Upload Image</label>
+                    <input
+                        type="file"
+                        id="studio-figure-image"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                    >
+                    <small>JPG, PNG, WEBP, or GIF. Maximum size: 5 MB.</small>
+                </div>
+
+                <div class="figure-studio-field">
+                    <label for="studio-figure-caption">Figure Caption</label>
+                    <input
+                        type="text"
+                        id="studio-figure-caption"
+                        maxlength="250"
+                        placeholder="e.g. Figure 1: Proposed System Architecture"
+                        required
+                    >
+                </div>
+
+                <div class="figure-studio-field">
+                    <label for="studio-figure-description">Description</label>
+                    <textarea
+                        id="studio-figure-description"
+                        rows="4"
+                        placeholder="Describe the figure and its significance in your research."
+                    ></textarea>
+                </div>
+
+                <div class="figure-studio-field">
+                    <label for="studio-figure-section">Document Section</label>
+                    <select id="studio-figure-section">
+                        <option value="">General / Unassigned</option>
+                    </select>
+                </div>
+
+                <button type="button" id="studio-preview-figure" class="figure-studio-primary-btn">
+                    Preview Figure
+                </button>
+            </form>
+        </aside>
+
+        <section class="figure-studio-editor">
+            <div class="figure-studio-editor-header">
+                <div>
+                    <span class="figure-studio-eyebrow">FIGURE EDITOR</span>
+                    <h2>Figure Preview</h2>
+                    <p>Review your image and caption before saving.</p>
+                </div>
+                <span class="figure-studio-status" id="studio-figure-status">Unsaved changes</span>
+            </div>
+
+            <div class="figure-studio-preview" id="studio-figure-preview">
+                <div class="figure-studio-empty-preview">
+                    <div class="figure-studio-empty-icon">▧</div>
+                    <h3>Your figure will appear here</h3>
+                    <p>Upload an image and select Preview Figure to get started.</p>
+                </div>
+            </div>
+
+            <div class="figure-studio-editor-footer">
+                <button type="button" id="studio-reset-figure" class="figure-studio-secondary-btn">
+                    Reset
+                </button>
+                <button type="button" id="studio-save-figure" class="figure-studio-primary-btn">
+                    Save Figure
+                </button>
+            </div>
+
+            <p class="figure-studio-feedback" id="studio-figure-feedback" role="status" aria-live="polite"></p>
+        </section>
+    </section>
+
+    <section class="figure-studio-saved-section">
+        <div class="figure-studio-saved-header">
+            <div>
+                <span class="figure-studio-eyebrow">YOUR RESEARCH VISUALS</span>
+                <h2>Existing Figures</h2>
+                <p>Manage the figures saved to your current project.</p>
+            </div>
+            <span class="figure-studio-count" id="studio-figure-count">0 figures</span>
+        </div>
+
+        <div class="figure-studio-saved-list" id="studio-saved-figures">
+            <div class="figure-studio-empty-saved">
+                Your saved figures will appear here.
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="js/figure-studio.js"></script>
+
+</body>
+</html>
