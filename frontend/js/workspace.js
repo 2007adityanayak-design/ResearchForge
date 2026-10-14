@@ -36,6 +36,11 @@ const figuresSummary = document.getElementById("figures-summary");
 const tablesSummary = document.getElementById("tables-summary");
 const existingMaterialSection = document.getElementById("existing-material-section");
 const workspaceSaveStatus = document.getElementById("workspace-save-status");
+const analyzeProjectButton = document.getElementById("analyze-project-btn");
+const aiAnalysisStatus = document.getElementById("ai-analysis-status");
+const aiAnalysisResults = document.getElementById("ai-analysis-results");
+const aiAnalysisSummary = document.getElementById("ai-analysis-summary");
+const aiAnalysisDetails = document.getElementById("ai-analysis-details");
 
 let currentProjectId = null;
 let currentDocumentType = null;
@@ -216,6 +221,9 @@ function initializeWorkspace() {
     }
 
     currentProjectId = Number(id);
+    if (analyzeProjectButton) {
+        analyzeProjectButton.addEventListener("click", analyzeCurrentProject);
+    }
 
     if (tablesButton) {
         tablesButton.addEventListener("click", () => {
@@ -288,6 +296,82 @@ async function apiRequest(url, options = {}, timeout = REQUEST_TIMEOUT) {
         throw error;
     } finally {
         clearTimeout(timeoutId);
+    }
+}
+async function analyzeCurrentProject() {
+    if (!currentProjectId) {
+        return;
+    }
+
+    analyzeProjectButton.disabled = true;
+    analyzeProjectButton.textContent = "Analyzing...";
+    aiAnalysisStatus.hidden = false;
+    aiAnalysisStatus.textContent = "ResearchForge AI is analyzing your project. Please wait.";
+    aiAnalysisResults.hidden = true;
+
+    try {
+        const response = await apiRequest(
+            `${API_BASE_URL}/projects/${encodeURIComponent(currentProjectId)}/analyze`,
+            { method: "POST" },
+            300000
+        );
+
+        const analysis = response.analysis;
+
+        aiAnalysisSummary.replaceChildren();
+        aiAnalysisDetails.replaceChildren();
+
+        const summaryHeading = document.createElement("h3");
+        summaryHeading.textContent = "Project Summary";
+
+        const summaryText = document.createElement("p");
+        summaryText.textContent = analysis.project_summary || "No summary available.";
+
+        const problemHeading = document.createElement("h3");
+        problemHeading.textContent = "Research Problem";
+
+        const problemText = document.createElement("p");
+        problemText.textContent = analysis.research_problem || "Not provided.";
+
+        aiAnalysisSummary.append(summaryHeading, summaryText, problemHeading, problemText);
+
+        const fields = [
+            ["Research Objectives", analysis.research_objectives],
+            ["Methodology Overview", analysis.methodology_overview],
+            ["Available Results", analysis.available_results],
+            ["Figures and Tables", analysis.figures_and_tables],
+            ["Missing Information", analysis.missing_information],
+            ["Potential Inconsistencies", analysis.potential_inconsistencies],
+            ["Recommended Document Structure", analysis.recommended_document_structure],
+            ["Research Integrity Notes", analysis.integrity_notes]
+        ];
+
+        for (const [title, value] of fields) {
+            const section = document.createElement("section");
+            const heading = document.createElement("h3");
+            heading.textContent = title;
+            section.appendChild(heading);
+
+            const content = document.createElement("pre");
+            content.textContent = Array.isArray(value)
+                ? value.length
+                    ? value.map(item => typeof item === "string" ? item : JSON.stringify(item, null, 2)).join("\n\n")
+                    : "No information available."
+                : typeof value === "object" && value !== null
+                    ? JSON.stringify(value, null, 2)
+                    : value || "No information available.";
+
+            section.appendChild(content);
+            aiAnalysisDetails.appendChild(section);
+        }
+
+        aiAnalysisResults.hidden = false;
+        aiAnalysisStatus.textContent = "Analysis completed successfully.";
+    } catch (error) {
+        aiAnalysisStatus.textContent = error.message || "Unable to analyze the project. Please try again.";
+    } finally {
+        analyzeProjectButton.disabled = false;
+        analyzeProjectButton.textContent = "Analyze Project";
     }
 }
 
@@ -1569,112 +1653,6 @@ function updateTablesSummary() {
     tablesSummary.textContent = documentTables.length
         ? `${documentTables.length} table${documentTables.length === 1 ? "" : "s"} added.`
         : "No tables added yet.";
-}
-
-async function manageFigures() {
-    if (!currentProjectId || workspaceLoading) {
-        showWorkspaceNotice("The document is not ready. Please wait and try again.");
-        return;
-    }
-
-    const action = prompt(
-        "Figure Manager\n\n1. Add a figure\n2. View figures\n3. Delete a figure\n\nEnter 1, 2, or 3:"
-    );
-
-    if (action === null) {
-        return;
-    }
-
-    if (action === "1") {
-        const caption = prompt("Enter the figure caption:");
-
-        if (caption === null || !caption.trim()) {
-            return;
-        }
-
-        const imageUrl = prompt(
-            "Enter an image URL if available, or leave blank to add it later:"
-        );
-
-        if (imageUrl === null) {
-            return;
-        }
-
-        const section = prompt(
-            `Enter the document section for this figure:\n\n${getSectionNames().join("\n")}`
-        );
-
-        if (section === null) {
-            return;
-        }
-
-        documentFigures.push({
-            id: createItemId(),
-            caption: caption.trim(),
-            image_url: imageUrl.trim(),
-            section: isValidSection(section.trim()) ? section.trim() : ""
-        });
-
-        await saveFigures();
-        return;
-    }
-
-    if (action === "2") {
-        alert(
-            documentFigures.length
-                ? documentFigures
-                    .map(
-                        (figure, index) =>
-                            `${index + 1}. ${figure.caption || "Untitled figure"}\nSection: ${figure.section || "Not assigned"}`
-                    )
-                    .join("\n\n")
-                : "No figures have been added."
-        );
-
-        return;
-    }
-
-    if (action === "3") {
-        if (!documentFigures.length) {
-            alert("There are no figures to delete.");
-            return;
-        }
-
-        const index = prompt(
-            `Enter the number of the figure to delete:\n\n${documentFigures.map((figure, i) => `${i + 1}. ${figure.caption || "Untitled figure"}`).join("\n")}`
-        );
-
-        if (index === null || !index.trim()) {
-            return;
-        }
-
-        const figureIndex = Number(index) - 1;
-
-        if (
-            !Number.isInteger(figureIndex) ||
-            figureIndex < 0 ||
-            figureIndex >= documentFigures.length
-        ) {
-            alert("Please enter a valid figure number.");
-            return;
-        }
-
-        if (!confirm("Are you sure you want to delete this figure?")) {
-            return;
-        }
-
-        const previousFigures = [...documentFigures];
-        documentFigures.splice(figureIndex, 1);
-
-        const saved = await saveFigures();
-
-        if (!saved) {
-            documentFigures = previousFigures;
-            updateFiguresSummary();
-        }
-    } else {
-        alert("Invalid choice. Enter 1, 2, or 3.");
-    }
 }
 
 function manageTables() {

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/style2.css">
     <link rel="stylesheet" href="css/style3.css">
+    <link rel="stylesheet" href="css/style4.css">
 </head>
 
 <body class="workspace-page">
@@ -79,7 +80,34 @@
                 </div>
             </div>
         </section>
+        <section class="workspace-section" id="ai-analysis-section">
+            <div class="workspace-section-heading">
+                <div>
+                    <h2>AI Project Analysis</h2>
+                    <p>Analyze your research, identify missing information, and receive recommendations for your
+                        document.</p>
+                </div>
+            </div>
 
+            <div class="ai-analysis-panel">
+                <div class="ai-analysis-intro">
+                    <h3>Understand your research before writing</h3>
+                    <p>ResearchForge AI will review your saved project information, objectives, methodology, figures,
+                        and tables.</p>
+                </div>
+
+                <button type="button" id="analyze-project-btn" class="workspace-action-btn">
+                    Analyze Project
+                </button>
+
+                <div id="ai-analysis-status" role="status" aria-live="polite" hidden></div>
+
+                <div id="ai-analysis-results" hidden>
+                    <div id="ai-analysis-summary"></div>
+                    <div id="ai-analysis-details"></div>
+                </div>
+            </div>
+        </section>
         <section class="workspace-section" id="document-structure-section">
             <div class="workspace-section-heading">
                 <div>

@@ -1,16 +1,21 @@
 import json
 import os
+import random
+import time
 from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 from google import genai
+from google.genai import errors, types
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(PROJECT_ROOT / ".env")
 
 
 def analyze_project(project_data: dict[str, Any]) -> dict[str, Any]:
+    analysis_started = time.perf_counter()
+
     api_key = os.getenv("GEMINI_API_KEY")
     model = os.getenv("GEMINI_MODEL")
 
@@ -20,7 +25,21 @@ def analyze_project(project_data: dict[str, Any]) -> dict[str, Any]:
     if not model:
         raise ValueError("Gemini model is not configured.")
 
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(
+        api_key=api_key,
+        http_options={
+            "timeout": 60000,
+            "retry_options": types.HttpRetryOptions(
+                attempts=1,
+            ),
+        },
+    )
+
+    project_json = json.dumps(
+        project_data,
+        ensure_ascii=False,
+        default=str,
+    )
 
     prompt = f"""
 You are the research analysis engine of ResearchForge, an academic
@@ -59,22 +78,74 @@ Rules:
 - Return valid JSON only, without Markdown fences.
 
 PROJECT INFORMATION:
-{json.dumps(project_data, ensure_ascii=False, default=str)}
+{project_json}
 """
 
-    response = client.models.generate_content(
-        model=model,
-        contents=prompt,
-        config={"response_mime_type": "application/json"},
-    )
+    print(f"[AI ANALYSIS] Model: {model}")
+    print(f"[AI ANALYSIS] Project data size: {len(project_json):,} characters")
+    print(f"[AI ANALYSIS] Prompt size: {len(prompt):,} characters")
 
-    if not response.text:
+    response = None
+
+    # Retry only temporary API failures.
+    retry_delays = [2, 5]
+
+    for attempt in range(len(retry_delays) + 1):
+        attempt_started = time.perf_counter()
+
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                },
+            )
+
+            attempt_duration = time.perf_counter() - attempt_started
+
+            print(
+                f"[AI ANALYSIS] Gemini request completed in "
+                f"{attempt_duration:.2f} seconds "
+                f"(attempt {attempt + 1})"
+            )
+
+            break
+
+        except errors.APIError as exc:
+            attempt_duration = time.perf_counter() - attempt_started
+
+            print(
+                f"[AI ANALYSIS] Gemini request failed after "
+                f"{attempt_duration:.2f} seconds "
+                f"(attempt {attempt + 1}): HTTP {exc.code}"
+            )
+
+            retryable_codes = (408, 429, 500, 502, 503, 504)
+
+            if exc.code not in retryable_codes:
+                raise
+
+            if attempt == len(retry_delays):
+                raise
+
+            delay = retry_delays[attempt] + random.uniform(0, 1)
+
+            print(f"[AI ANALYSIS] Retrying in {delay:.2f} seconds...")
+
+            time.sleep(delay)
+
+    if response is None or not response.text:
         raise ValueError("Gemini returned an empty analysis.")
+
+    parsing_started = time.perf_counter()
 
     try:
         result = json.loads(response.text)
     except json.JSONDecodeError as exc:
         raise ValueError("Gemini returned invalid JSON.") from exc
+
+    parsing_duration = time.perf_counter() - parsing_started
 
     if not isinstance(result, dict):
         raise ValueError("Gemini returned an unexpected response structure.")
@@ -92,7 +163,23 @@ PROJECT INFORMATION:
         "integrity_notes",
     }
 
-    if not required_keys.issubset(result.keys()):
-        raise ValueError("Gemini's analysis is missing required fields.")
+    missing_keys = required_keys - result.keys()
+
+    if missing_keys:
+        raise ValueError(
+            "Gemini's analysis is missing required fields: "
+            + ", ".join(sorted(missing_keys))
+        )
+
+    if not isinstance(result["figures_and_tables"], dict):
+        raise ValueError("Gemini returned an invalid figures_and_tables structure.")
+
+    print(
+        f"[AI ANALYSIS] JSON parsing and validation: " f"{parsing_duration:.4f} seconds"
+    )
+
+    total_duration = time.perf_counter() - analysis_started
+
+    print(f"[AI ANALYSIS] Total analysis time: " f"{total_duration:.2f} seconds")
 
     return result

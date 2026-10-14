@@ -12,6 +12,7 @@ from sqlalchemy import inspect, text
 
 from database.database import engine, Base, SessionLocal
 from database.models import Project
+from ai.project_analyzer import analyze_project
 
 app = FastAPI(title="ResearchForge API")
 
@@ -511,6 +512,7 @@ def save_document_tables(
     finally:
         db.close()
 
+
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg": ".jpg",
     "image/png": ".png",
@@ -558,10 +560,7 @@ async def upload_figure_image(
         elif content_type == "image/png":
             valid_image = image_data.startswith(b"\x89PNG\r\n\x1a\n")
         elif content_type == "image/webp":
-            valid_image = (
-                image_data.startswith(b"RIFF")
-                and image_data[8:12] == b"WEBP"
-            )
+            valid_image = image_data.startswith(b"RIFF") and image_data[8:12] == b"WEBP"
         else:
             valid_image = image_data.startswith((b"GIF87a", b"GIF89a"))
 
@@ -587,3 +586,49 @@ async def upload_figure_image(
         await image.close()
         db.close()
 
+
+@app.post("/projects/{project_id}/analyze")
+def analyze_saved_project(project_id: int):
+    db = SessionLocal()
+
+    try:
+        project = get_project_or_404(db, project_id)
+
+        project_data = {
+            "id": project.id,
+            "name": project.name,
+            "document_type": project.document_type,
+            "format_style": project.format_style,
+            "author_name": project.author_name or "",
+            "institution": project.institution or "",
+            "department": project.department or "",
+            "supervisor": project.supervisor or "",
+            "problem_statement": project.problem_statement or "",
+            "research_objectives": project.research_objectives or "",
+            "research_notes": project.research_notes or "",
+            "sections": load_json(project.document_sections, {}),
+            "figures": load_json(project.document_figures, []),
+            "tables": load_json(project.document_tables, []),
+        }
+
+        try:
+            analysis = analyze_project(project_data)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=502,
+                detail=str(exc),
+            ) from exc
+        except Exception as exc:
+            raise HTTPException(
+                status_code=502,
+                detail="The AI analysis service is temporarily unavailable.",
+            ) from exc
+
+        return {
+            "project_id": project.id,
+            "project_name": project.name,
+            "analysis": analysis,
+        }
+
+    finally:
+        db.close()

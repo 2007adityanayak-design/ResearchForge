@@ -50,18 +50,6 @@ function initializeFiguresManager() {
             "Unable to identify the current project.";
         return;
     }
-
-    figuresManagerButton.addEventListener("click", event => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        if (workspace2ManagerOpen) {
-            return;
-        }
-
-        openFiguresManager();
-    });
-
     console.log(
         "Figure manager initialized for project:",
         workspace2ProjectId
