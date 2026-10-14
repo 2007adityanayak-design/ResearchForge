@@ -13,6 +13,7 @@ from sqlalchemy import inspect, text
 from database.database import engine, Base, SessionLocal
 from database.models import Project
 from ai.project_analyzer import analyze_project
+from ai.document_planner import plan_document
 
 app = FastAPI(title="ResearchForge API")
 
@@ -628,6 +629,54 @@ def analyze_saved_project(project_id: int):
             "project_id": project.id,
             "project_name": project.name,
             "analysis": analysis,
+        }
+
+    finally:
+        db.close()
+
+@app.post("/projects/{project_id}/plan")
+def plan_saved_document(project_id: int):
+    db = SessionLocal()
+
+    try:
+        project = get_project_or_404(db, project_id)
+
+        project_data = {
+            "id": project.id,
+            "name": project.name,
+            "document_type": project.document_type,
+            "format_style": project.format_style,
+            "author_name": project.author_name or "",
+            "institution": project.institution or "",
+            "department": project.department or "",
+            "supervisor": project.supervisor or "",
+            "problem_statement": project.problem_statement or "",
+            "research_objectives": project.research_objectives or "",
+            "research_notes": project.research_notes or "",
+            "sections": load_json(project.document_sections, {}),
+            "figures": load_json(project.document_figures, []),
+            "tables": load_json(project.document_tables, []),
+        }
+
+        try:
+            plan = plan_document(project_data)
+
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=502,
+                detail=str(exc),
+            ) from exc
+
+        except Exception as exc:
+            raise HTTPException(
+                status_code=502,
+                detail="The AI document planning service is temporarily unavailable.",
+            ) from exc
+
+        return {
+            "project_id": project.id,
+            "project_name": project.name,
+            "plan": plan,
         }
 
     finally:
