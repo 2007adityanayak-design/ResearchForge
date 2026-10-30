@@ -1,4 +1,4 @@
-﻿import json
+import json
 import re
 from typing import Any
 
@@ -7,7 +7,6 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
     issues: list[dict[str, str]] = []
 
     sections = project_data.get("sections", {})
-
     if not isinstance(sections, dict):
         sections = {}
 
@@ -17,8 +16,6 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
         if isinstance(title, str) and isinstance(content, str)
     }
 
-    combined_text = "\n".join(normalized_sections.values()).casefold()
-
     def add_issue(
         category: str,
         severity: str,
@@ -26,62 +23,237 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
         finding: str,
         recommendation: str,
     ) -> None:
-        issues.append(
-            {
-                "category": category,
-                "severity": severity,
-                "location": location,
-                "finding": finding,
-                "recommendation": recommendation,
-            }
-        )
+        issues.append({
+            "category": category,
+            "severity": severity,
+            "location": location,
+            "finding": finding,
+            "recommendation": recommendation,
+        })
 
-    automatic_patterns = (
-        r"\bautomatically activates?\b",
-        r"\bautomated operation\b",
-        r"\bautomatic switching\b",
-        r"\bautomatic(?:ally)? controlled\b",
-        r"\bwithout manual intervention\b",
-        r"\bfully autonomous\b",
-    )
+    # ---------------------------------------------------------
+    # 1. Detect implementation-status contradictions.
+    # ---------------------------------------------------------
 
-    manual_patterns = (
-        r"\boperates? in manual mode\b",
-        r"\bmanually activated\b",
-        r"\bmanual(?:ly)? controlled\b",
-        r"\bplanned for future development\b",
-        r"\bfuture development roadmap\b",
-        r"\bplanned\b",
-    )
+    status_patterns = {
+        "automatic_operation": (
+            r"\bautomatically activates?\b",
+            r"\bautomated operation\b",
+            r"\bautomatic switching\b",
+            r"\bautomatic(?:ally)? controlled\b",
+            r"\bwithout manual intervention\b",
+            r"\bfully autonomous\b",
+            r"\bldr[\s-]*(?:based|controlled|switching)\b",
+        ),
+        "manual_operation": (
+            r"\boperates? in manual mode\b",
+            r"\bmanually activated\b",
+            r"\bmanual(?:ly)? controlled\b",
+            r"\bdirect manual control\b",
+            r"\bmanual activation\b",
+        ),
+    }
 
-    automatic_locations = []
-    manual_locations = []
+    status_locations: dict[str, list[str]] = {
+        key: [] for key in status_patterns
+    }
 
     for title, content in normalized_sections.items():
         text = content.casefold()
 
-        if any(re.search(pattern, text) for pattern in automatic_patterns):
-            automatic_locations.append(title)
+        for status, patterns in status_patterns.items():
+            if any(re.search(pattern, text) for pattern in patterns):
+                status_locations[status].append(title)
 
-        if any(re.search(pattern, text) for pattern in manual_patterns):
-            manual_locations.append(title)
-
-    if automatic_locations and manual_locations:
+    if all(status_locations.values()):
         add_issue(
             "implementation_status",
             "high",
-            ", ".join(dict.fromkeys(automatic_locations + manual_locations)),
-            (
-                "The document contains statements suggesting automatic operation "
-                "and statements suggesting manual operation or planned implementation. "
-                "These statements may refer to different development stages."
+            ", ".join(
+                status_locations["automatic_operation"]
+                + status_locations["manual_operation"]
             ),
             (
-                "Compare the conflicting passages and establish which features are "
-                "implemented, tested, proposed, or planned. Do not resolve the "
-                "contradiction without confirmation."
+                "Different sections describe both automatic and manual "
+                "operation. These may represent different development stages, "
+                "but the current implementation status is not established."
+            ),
+            (
+                "Identify which operation mode is physically implemented, "
+                "which has been tested, and which remains proposed. Do not "
+                "assume that automatic operation is implemented."
             ),
         )
+
+    # ---------------------------------------------------------
+    # 2. Detect hardware and power-source status conflicts.
+    # ---------------------------------------------------------
+
+    hardware_groups = {
+        "solar_power": (
+            r"\bsolar panel\b",
+            r"\bphotovoltaic\b",
+            r"\bsolar powered\b",
+            r"\bsolar energy harvesting\b",
+        ),
+        "rechargeable_storage": (
+            r"\brechargeable battery\b",
+            r"\bbattery charging\b",
+            r"\bcharge controller\b",
+            r"\bbattery storage\b",
+        ),
+        "non_rechargeable_storage": (
+            r"\bnon[\s-]?rechargeable battery\b",
+            r"\bprimary battery\b",
+            r"\bdisposable battery\b",
+        ),
+    }
+
+    hardware_evidence: dict[str, list[tuple[str, str]]] = {
+        key: [] for key in hardware_groups
+    }
+
+    future_patterns = (
+        r"\bfuture\b",
+        r"\bproposed\b",
+        r"\bplanned\b",
+        r"\bpotential\b",
+        r"\bwill be integrated\b",
+        r"\bmay be integrated\b",
+        r"\bto be implemented\b",
+        r"\bintended to be\b",
+        r"\bwould be\b",
+    )
+
+    not_implemented_patterns = (
+        r"\bnot implemented\b",
+        r"\bnot yet implemented\b",
+        r"\bnot currently used\b",
+        r"\bhas not been implemented\b",
+        r"\bhas not been integrated\b",
+        r"\bcurrently absent\b",
+        r"\bnot part of the current prototype\b",
+        r"\bexcluded from the current prototype\b",
+    )
+
+    current_patterns = (
+        r"\bcurrently uses\b",
+        r"\bis currently used\b",
+        r"\bis implemented\b",
+        r"\bhas been implemented\b",
+        r"\bis integrated\b",
+        r"\bhas been integrated\b",
+        r"\bis installed\b",
+        r"\bwas installed\b",
+        r"\bphysically present\b",
+        r"\bused in the prototype\b",
+        r"\bpart of the prototype\b",
+        r"\bthe prototype uses\b",
+        r"\bthe prototype includes\b",
+        r"\bthe system uses\b",
+        r"\bthe system includes\b",
+    )
+
+    def classify_hardware_sentence(sentence: str) -> str:
+        sentence = sentence.casefold()
+
+        if any(re.search(pattern, sentence) for pattern in not_implemented_patterns):
+            return "not_implemented"
+
+        if any(re.search(pattern, sentence) for pattern in future_patterns):
+            return "future_or_proposed"
+
+        if any(re.search(pattern, sentence) for pattern in current_patterns):
+            return "implemented_or_current"
+
+        return "unspecified"
+
+    hardware_evidence: dict[str, list[tuple[str, str, str]]] = {
+        key: [] for key in hardware_groups
+    }
+
+    section_items = sections.items() if isinstance(sections, dict) else enumerate(sections)
+
+    for title, section_data in section_items:
+        if isinstance(section_data, dict):
+            content = (
+                section_data.get("content")
+                or section_data.get("text")
+                or section_data.get("body")
+                or ""
+            )
+        else:
+            content = str(section_data or "")
+
+        if not isinstance(content, str):
+            content = str(content)
+
+        sentences = re.split(r"(?<=[.!?])\s+|\n+", content)
+
+        for sentence in sentences:
+            sentence = sentence.strip()
+
+            if not sentence:
+                continue
+
+            for hardware, patterns in hardware_groups.items():
+                if any(re.search(pattern, sentence, re.IGNORECASE) for pattern in patterns):
+                    status = classify_hardware_sentence(sentence)
+
+                    if status != "unspecified":
+                        hardware_evidence[hardware].append(
+                            (title, status, sentence[:240])
+                        )
+
+    for hardware, entries in hardware_evidence.items():
+        current = [
+            (title, sentence)
+            for title, status, sentence in entries
+            if status == "implemented_or_current"
+        ]
+
+        future = [
+            (title, sentence)
+            for title, status, sentence in entries
+            if status == "future_or_proposed"
+        ]
+
+        not_implemented = [
+            (title, sentence)
+            for title, status, sentence in entries
+            if status == "not_implemented"
+        ]
+
+        conflict = bool(
+            (current and (future or not_implemented))
+            or (future and not_implemented)
+        )
+
+        if conflict:
+            locations = list(dict.fromkeys(
+                [title for title, _ in current]
+                + [title for title, _ in future]
+                + [title for title, _ in not_implemented]
+            ))
+
+            add_issue(
+                "hardware_implementation_status",
+                "high",
+                ", ".join(locations),
+                (
+                    f"The {hardware.replace('_', ' ')} feature has conflicting "
+                    "sentence-level implementation descriptions."
+                ),
+                (
+                    "Confirm whether this feature is physically implemented, "
+                    "tested, not implemented, or planned for future development. "
+                    "Align all report sections with the confirmed status."
+                ),
+            )
+
+    # ---------------------------------------------------------
+    # 3. Detect unsupported experimental and performance claims.
+    # ---------------------------------------------------------
 
     result_claim_patterns = (
         r"\bsuccessfully demonstrated\b",
@@ -92,6 +264,9 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
         r"\bresults? (?:confirm|demonstrate|prove|establish)\b",
         r"\beffectively reduces?\b",
         r"\bvalidated in both\b",
+        r"\bachieved\s+\d+(?:\.\d+)?\s*%?",
+        r"\bdegraded?\s+\d+(?:\.\d+)?\s*%?",
+        r"\bpollutant removal efficiency\b",
     )
 
     result_sections = {
@@ -103,29 +278,36 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
         )
     }
 
-    claims_found = any(
-        re.search(pattern, content.casefold())
-        for content in result_sections.values()
-        for pattern in result_claim_patterns
-    )
+    claims = [
+        title
+        for title, content in result_sections.items()
+        if any(
+            re.search(pattern, content.casefold())
+            for pattern in result_claim_patterns
+        )
+    ]
 
-    if claims_found:
+    if claims:
         add_issue(
             "experimental_evidence",
             "high",
-            ", ".join(result_sections.keys()),
+            ", ".join(claims),
             (
-                "The document makes claims about successful testing, validation, "
-                "or pollutant reduction. The presence of these statements alone "
-                "does not establish that the results are supported by measurements."
+                "The report contains claims of successful testing, validation, "
+                "or pollutant-removal performance. These claims are not "
+                "independently established by the presence of the statements."
             ),
             (
-                "Check the original experimental records. Where applicable, supply "
-                "test conditions, baseline and final measurements, units, sample "
-                "counts, and calculation methods. Preserve unsupported statements "
-                "as reported claims until verified."
+                "Check original experimental records. Require the measured "
+                "quantity, units, test conditions, baseline and final values, "
+                "sample count, and calculation method before presenting "
+                "performance as an established result."
             ),
         )
+
+    # ---------------------------------------------------------
+    # 4. Detect vague figure descriptions.
+    # ---------------------------------------------------------
 
     figures = project_data.get("figures", [])
 
@@ -142,28 +324,25 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
                 continue
 
             caption = str(figure.get("caption", "")).strip()
-            caption_normalized = caption.casefold()
 
-            if not caption or caption_normalized in {
-                "figure",
-                "image",
-                "photo",
-                "picture",
-                "trail2",
-                "untitled",
-                "untitled figure",
+            if not caption or caption.casefold() in {
+                "figure", "image", "photo", "picture",
+                "trail2", "untitled", "untitled figure",
             }:
                 add_issue(
                     "figure_description",
                     "medium",
                     f"Figure {index}",
-                    f"The figure caption '{caption or '(empty)'}' does not "
-                    "adequately identify the image content.",
+                    f"The figure caption '{caption or '(empty)'}' does not adequately identify the image.",
                     (
-                        "Provide a descriptive caption. Inspect the actual image "
-                        "before making claims about what it depicts."
+                        "Provide a descriptive caption and inspect the actual "
+                        "image before making claims about what it depicts."
                     ),
                 )
+
+    # ---------------------------------------------------------
+    # 5. Detect ambiguous tables and unsupported interpretations.
+    # ---------------------------------------------------------
 
     tables = project_data.get("tables", [])
 
@@ -199,16 +378,9 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
             headers = rows[0] if isinstance(rows, list) and rows else []
 
             generic_headers = {
-                "column",
-                "column 1",
-                "column 2",
-                "column 3",
-                "column 4",
-                "header",
-                "header 1",
-                "header 2",
-                "value",
-                "values",
+                "column", "column 1", "column 2", "column 3",
+                "column 4", "header", "header 1", "header 2",
+                "value", "values",
             }
 
             if isinstance(headers, list) and headers:
@@ -228,16 +400,12 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
                         ),
                         (
                             "Provide meaningful column names, units, data provenance, "
-                            "and an explanation of what each row represents before "
-                            "using the table to support conclusions."
+                            "and an explanation of what each row represents."
                         ),
                     )
 
             if not caption or caption.casefold() in {
-                "table",
-                "untitled",
-                "untitled table",
-                "trial table 1",
+                "table", "untitled", "untitled table", "trial table 1",
             }:
                 add_issue(
                     "table_description",
@@ -247,43 +415,47 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
                     "Provide a caption that accurately describes the table's contents.",
                 )
 
-            if not description.strip():
+            if not description:
                 add_issue(
                     "table_context",
                     "low",
                     f"Table {index}: {caption or '(untitled)'}",
                     "No explanatory table description has been supplied.",
-                    (
-                        "Add context explaining the table's purpose and the meaning "
-                        "of its data, if known. Do not invent missing details."
-                    ),
+                    "Add context explaining the table's purpose without inventing missing details.",
                 )
 
-    if not project_data.get("problem_statement", "").strip():
-        add_issue(
-            "missing_project_information",
-            "medium",
+    # ---------------------------------------------------------
+    # 6. Detect missing project-level information.
+    # ---------------------------------------------------------
+
+    for field, label, recommendation, severity in (
+        (
+            "problem_statement",
             "Problem statement",
-            "The project has no saved problem statement.",
-            "Ask the user to provide or confirm the problem statement before drafting claims that depend on it.",
-        )
-
-    if not project_data.get("research_objectives", "").strip():
-        add_issue(
-            "missing_project_information",
+            "Ask the user to provide or confirm the problem statement.",
             "medium",
+        ),
+        (
+            "research_objectives",
             "Research objectives",
-            "The project has no saved research objectives.",
             "Ask the user to provide or confirm the research objectives.",
-        )
-
-    if not project_data.get("research_notes", "").strip():
-        add_issue(
-            "missing_project_information",
-            "low",
+            "medium",
+        ),
+        (
+            "research_notes",
             "Research notes",
-            "No additional research notes have been saved.",
-            "Request relevant implementation details, experimental records, or clarifications when needed.",
-        )
+            "Request relevant implementation details, experimental records, or clarifications.",
+            "low",
+        ),
+    ):
+        value = project_data.get(field, "")
+        if not isinstance(value, str) or not value.strip():
+            add_issue(
+                "missing_project_information",
+                severity,
+                label,
+                f"The project has no saved {label.casefold()}.",
+                recommendation,
+            )
 
     return issues

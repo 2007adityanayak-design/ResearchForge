@@ -15,6 +15,11 @@ from database.models import Project
 from ai.project_analyzer import analyze_project
 from ai.document_planner import plan_document
 from ai.document_generator import generate_document_section
+from ai.output_quality_auditor import (
+    audit_generated_section,
+    summarize_quality_findings,
+    evaluate_generated_section,
+)
 
 app = FastAPI(title="ResearchForge API")
 
@@ -770,6 +775,64 @@ def generate_project_section(
                 detail="This section is now empty. Reload it before regenerating.",
             )
 
+        # Run independent quality checks without modifying generated content.
+        deterministic_audit_error = None
+
+        try:
+            deterministic_findings = audit_generated_section(
+                content=generated["content"],
+                section_title=generated["section_title"],
+                project_data=project_data,
+            )
+        except Exception as audit_exc:
+            deterministic_findings = []
+            deterministic_audit_error = str(audit_exc)
+            print(
+                f"[QUALITY AUDITOR] Deterministic audit failed for "
+                f"project {project_id}: {audit_exc}"
+            )
+
+        ai_evaluation = None
+        ai_audit_error = None
+        combined_findings = list(deterministic_findings)
+
+        try:
+            ai_evaluation = evaluate_generated_section(
+                content=generated["content"],
+                section_title=generated["section_title"],
+                project_data=project_data,
+                deterministic_findings=deterministic_findings,
+            )
+
+            combined_findings.extend(ai_evaluation["findings"])
+
+        except Exception as audit_exc:
+            ai_audit_error = str(audit_exc)
+            print(
+                f"[QUALITY AUDITOR] AI evaluation failed for "
+                f"project {project_id}: {audit_exc}"
+            )
+
+        quality_summary = summarize_quality_findings(
+            combined_findings
+        )
+
+        quality_audit = {
+            "audit_status": (
+                "completed" if ai_evaluation is not None and deterministic_audit_error is None
+                else "partial"
+            ),
+            "deterministic_findings": deterministic_findings,
+            "deterministic_audit_error": ("Deterministic audit could not be completed." if deterministic_audit_error else None),
+            "ai_evaluation": ai_evaluation,
+            "findings": combined_findings,
+            "summary": quality_summary,
+            "ai_audit_error": (
+                "AI evaluation could not be completed."
+                if ai_audit_error else None
+            ),
+        }
+
         current_sections[section_id] = generated["content"]
 
         project.document_sections = json.dumps(
@@ -787,6 +850,7 @@ def generate_project_section(
             "background_context": generated["background_context"],
             "information_gaps": generated["information_gaps"],
             "integrity_notes": generated["integrity_notes"],
+            "quality_audit": quality_audit,
             "sections": current_sections,
             "message": "Document section generated and saved successfully.",
         }
@@ -805,4 +869,3 @@ def generate_project_section(
 
     finally:
         db.close()
-

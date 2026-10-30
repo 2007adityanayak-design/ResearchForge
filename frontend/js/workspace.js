@@ -548,6 +548,49 @@ async function loadDocumentSections(documentType) {
 
     documentSections = { ...savedSections };
 
+    const plannerSectionAliases = {
+        research_objectives: "Objectives",
+        prototype_design_and_methodology: "Methodology",
+        limitations_and_future_work: "Future Scope",
+        research_problem_and_objectives: "Research Problem and Objectives",
+        research_methodology: "Research Methodology",
+        results_and_analysis: "Results and Analysis",
+        related_work: "Related Work",
+        review_scope_and_methodology: "Review Scope and Methodology",
+        literature_classification: "Literature Classification",
+        comparative_analysis: "Comparative Analysis",
+        research_gaps: "Research Gaps",
+        future_research_directions: "Future Research Directions"
+    };
+
+    const normalizeSectionKey = value =>
+        value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    Object.entries(plannerSectionAliases).forEach(([plannerId, displayName]) => {
+        if (
+            typeof documentSections[displayName] !== "string" &&
+            typeof savedSections[plannerId] === "string"
+        ) {
+            documentSections[displayName] = savedSections[plannerId];
+        }
+    });
+
+    configuration.sections.forEach(displayName => {
+        if (typeof documentSections[displayName] === "string") {
+            return;
+        }
+
+        const matchingKey = Object.keys(savedSections).find(
+            key =>
+                normalizeSectionKey(key) ===
+                normalizeSectionKey(displayName)
+        );
+
+        if (matchingKey && typeof savedSections[matchingKey] === "string") {
+            documentSections[displayName] = savedSections[matchingKey];
+        }
+    });
+
     sectionVersions = {};
     sectionSavedVersions = {};
     sectionSaveErrors = {};
@@ -1162,6 +1205,8 @@ function openSectionEditor(section, allSections) {
         toolbar,
         title,
         description,
+        generationStatus,
+        generationDetails,
         editor,
         footer,
         navigation

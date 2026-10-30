@@ -112,8 +112,18 @@ async function generateCurrentDocumentSection(
 
         const documentPlan = await getGenerationDocumentPlan();
 
-        const plannedSections =
-            documentPlan?.recommended_sections || [];
+        if (
+            !documentPlan ||
+            !Array.isArray(documentPlan.recommended_sections) ||
+            !Array.isArray(documentPlan.integrity_requirements) ||
+            !Array.isArray(documentPlan.missing_information)
+        ) {
+            throw new Error(
+                "A complete AI document plan could not be prepared. Generation stopped to protect factual accuracy."
+            );
+        }
+
+        const plannedSections = documentPlan.recommended_sections;
 
         const plannedSection = plannedSections.find(item =>
             item &&
@@ -249,6 +259,161 @@ async function generateCurrentDocumentSection(
             "Integrity and verification notes",
             response.integrity_notes
         );
+
+        const renderQualityAudit = audit => {
+            if (!audit || typeof audit !== "object") {
+                return;
+            }
+
+            const evaluation = audit.ai_evaluation || {};
+            const summary = audit.summary || {};
+            const findings = Array.isArray(audit.findings)
+                ? audit.findings
+                : [];
+            const dimensions = evaluation.dimension_scores || {};
+
+            const report = document.createElement("section");
+            report.className = "ai-quality-report";
+
+            const heading = document.createElement("h3");
+            heading.textContent = "AI Academic Quality Report";
+            report.appendChild(heading);
+
+            const status = document.createElement("p");
+            status.className = "ai-quality-status";
+            status.textContent =
+                audit.audit_status === "completed"
+                    ? "Quality audit completed"
+                    : "Quality audit partially completed";
+            report.appendChild(status);
+
+            if (Number.isFinite(evaluation.overall_score)) {
+                const score = document.createElement("div");
+                score.className = "ai-quality-overall-score";
+                score.textContent =
+                    `${evaluation.overall_score}/100`;
+                report.appendChild(score);
+            }
+
+            if (evaluation.score_explanation) {
+                const explanation = document.createElement("p");
+                explanation.textContent = evaluation.score_explanation;
+                report.appendChild(explanation);
+            }
+
+            const addList = (title, items, className = "") => {
+                if (!Array.isArray(items) || items.length === 0) {
+                    return;
+                }
+
+                const group = document.createElement("div");
+                group.className = `ai-quality-group ${className}`.trim();
+
+                const groupHeading = document.createElement("h4");
+                groupHeading.textContent = title;
+
+                const list = document.createElement("ul");
+
+                items.forEach(item => {
+                    const entry = document.createElement("li");
+                    entry.textContent = item;
+                    list.appendChild(entry);
+                });
+
+                group.append(groupHeading, list);
+                report.appendChild(group);
+            };
+
+            if (Object.keys(dimensions).length > 0) {
+                const group = document.createElement("div");
+                group.className = "ai-quality-group";
+
+                const dimensionHeading = document.createElement("h4");
+                dimensionHeading.textContent = "Quality Dimensions";
+
+                const list = document.createElement("ul");
+
+                Object.entries(dimensions).forEach(([name, value]) => {
+                    const entry = document.createElement("li");
+                    const label = name
+                        .replaceAll("_", " ")
+                        .replace(/\b\w/g, character => character.toUpperCase());
+
+                    entry.textContent = `${label}: ${value}/100`;
+                    list.appendChild(entry);
+                });
+
+                group.append(dimensionHeading, list);
+                report.appendChild(group);
+            }
+
+            addList("Identified Strengths", evaluation.strengths);
+
+            if (findings.length > 0) {
+                const group = document.createElement("div");
+                group.className = "ai-quality-group";
+
+                const findingsHeading = document.createElement("h4");
+                findingsHeading.textContent =
+                    `Findings (${findings.length})`;
+
+                group.appendChild(findingsHeading);
+
+                findings.forEach(finding => {
+                    const card = document.createElement("article");
+                    card.className =
+                        `ai-quality-finding severity-${finding.severity || "low"}`;
+
+                    const title = document.createElement("strong");
+                    title.textContent =
+                        `${finding.severity || "Finding"}: ${finding.finding || finding.category || "Quality finding"}`;
+
+                    card.appendChild(title);
+
+                    if (finding.location) {
+                        const location = document.createElement("p");
+                        location.textContent = `Location: ${finding.location}`;
+                        card.appendChild(location);
+                    }
+
+                    if (finding.explanation) {
+                        const explanation = document.createElement("p");
+                        explanation.textContent = finding.explanation;
+                        card.appendChild(explanation);
+                    }
+
+                    if (finding.recommendation) {
+                        const recommendation = document.createElement("p");
+                        recommendation.textContent =
+                            `Recommendation: ${finding.recommendation}`;
+                        card.appendChild(recommendation);
+                    }
+
+                    group.appendChild(card);
+                });
+
+                report.appendChild(group);
+            }
+
+            if (evaluation.limitations?.length) {
+                addList("Evaluation Limitations", evaluation.limitations);
+            }
+
+            if (summary.severity_counts) {
+                const counts = document.createElement("p");
+                counts.className = "ai-quality-summary";
+                counts.textContent =
+                    `Critical: ${summary.severity_counts.critical || 0} | ` +
+                    `High: ${summary.severity_counts.high || 0} | ` +
+                    `Medium: ${summary.severity_counts.medium || 0} | ` +
+                    `Low: ${summary.severity_counts.low || 0}`;
+                report.appendChild(counts);
+            }
+
+            generationDetails.appendChild(report);
+        };
+
+        renderQualityAudit(response.quality_audit);
 
         generationDetails.hidden =
             generationDetails.childElementCount === 0;

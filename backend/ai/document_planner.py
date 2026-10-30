@@ -14,6 +14,43 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(PROJECT_ROOT / ".env")
 
 
+def enforce_evidence_findings(
+    plan: dict[str, Any],
+    findings: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Preserve high-severity evidence warnings in the document plan."""
+
+    for finding in findings:
+        if not isinstance(finding, dict):
+            continue
+
+        if str(finding.get("severity", "")).casefold() != "high":
+            continue
+
+        category = str(finding.get("category", "evidence")).replace("_", " ")
+        location = str(finding.get("location", "Project data"))
+        description = str(finding.get("finding", "")).strip()
+        recommendation = str(finding.get("recommendation", "")).strip()
+
+        clarification = (
+            f"Evidence clarification required ({category}) at {location}: "
+            f"{description}"
+        )
+
+        integrity_rule = (
+            f"Do not present the disputed information as an established fact. "
+            f"{recommendation}"
+        )
+
+        if clarification not in plan["missing_information"]:
+            plan["missing_information"].append(clarification)
+
+        if integrity_rule not in plan["integrity_requirements"]:
+            plan["integrity_requirements"].append(integrity_rule)
+
+    return plan
+
+
 def validate_plan_structure(result: dict[str, Any]) -> None:
     required_keys = {
         "document_title",
@@ -57,6 +94,11 @@ def validate_plan_structure(result: dict[str, Any]) -> None:
             raise ValueError(
                 f"The document plan contains an invalid '{field}' structure."
             )
+
+    if not result["recommended_sections"]:
+        raise ValueError(
+            "The document plan must contain at least one recommended section."
+        )
 
     section_ids = set()
     section_titles = set()
@@ -607,68 +649,7 @@ PROJECT INFORMATION:
     validate_plan_structure(result)
     validate_plan_assets(result, project_data)
 
-    print(
-        f"[AI PLANNER] Total planning time: "
-        f"{time.perf_counter() - started_at:.2f} seconds"
-    )
-
-    return result
-
-    required_keys = {
-        "document_title",
-        "document_type",
-        "document_purpose",
-        "target_audience",
-        "recommended_sections",
-        "figure_placement",
-        "table_placement",
-        "missing_information",
-        "writing_guidelines",
-        "integrity_requirements",
-    }
-
-    missing_keys = required_keys - result.keys()
-
-    if missing_keys:
-        raise ValueError(
-            "The document plan is missing required fields: "
-            + ", ".join(sorted(missing_keys))
-        )
-
-    list_fields = {
-        "recommended_sections",
-        "figure_placement",
-        "table_placement",
-        "missing_information",
-        "writing_guidelines",
-        "integrity_requirements",
-    }
-
-    for field in list_fields:
-        if not isinstance(result[field], list):
-            raise ValueError(f"Gemini returned an invalid '{field}' structure.")
-
-    for index, section in enumerate(result["recommended_sections"]):
-        if not isinstance(section, dict):
-            raise ValueError(f"Document plan section {index + 1} is invalid.")
-
-        required_section_fields = {
-            "section_id",
-            "title",
-            "purpose",
-            "key_points",
-            "source_fields",
-            "required_information",
-            "suggested_word_count",
-        }
-
-        missing_section_fields = required_section_fields - section.keys()
-
-        if missing_section_fields:
-            raise ValueError(
-                f"Document plan section {index + 1} is missing fields: "
-                + ", ".join(sorted(missing_section_fields))
-            )
+    enforce_evidence_findings(result, evidence_audit)
 
     print(
         f"[AI PLANNER] Total planning time: "

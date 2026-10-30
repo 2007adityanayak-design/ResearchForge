@@ -1630,3 +1630,27 @@
         animation-duration: 0.01ms !important;
     }
 }
+/* Back to Dashboard hover-pop effect */
+.workspace-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease;
+    transform: translateY(0) scale(1);
+}
+
+.workspace-back-btn:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+}
+
+.workspace-back-btn:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .workspace-back-btn {
+        transition: none;
+    }
+}
+

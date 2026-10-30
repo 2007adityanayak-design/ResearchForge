@@ -1,4 +1,4 @@
-﻿import json
+import json
 import os
 import random
 import time
@@ -228,6 +228,20 @@ def build_section_generation_prompt(
         default=str,
     )
 
+    plan_data = document_plan or {}
+
+    evidence_constraints = {
+        "integrity_requirements": plan_data.get("integrity_requirements", []),
+        "missing_information": plan_data.get("missing_information", []),
+    }
+
+    evidence_constraints_json = json.dumps(
+        evidence_constraints,
+        ensure_ascii=False,
+        indent=2,
+        default=str,
+    )
+
     previous_json = json.dumps(
         previous_sections or {},
         ensure_ascii=False,
@@ -270,7 +284,29 @@ subject specialist, critical reviewer and scientific editor.
 {previous_json}
 
 ==================================================
-5. PRIMARY WRITING OBJECTIVE
+5. MANDATORY EVIDENCE AND INTEGRITY CONSTRAINTS
+==================================================
+
+{evidence_constraints_json}
+
+These constraints are mandatory.
+
+- Follow every integrity requirement when generating this section.
+- Treat missing-information entries as unresolved information, not as
+  permission to invent missing project details.
+- Never present disputed implementation details as established facts.
+- If implementation status is unclear, explicitly qualify the statement
+  or identify the information gap.
+- Do not silently resolve contradictions between project information.
+- Preserve the distinction between current implementation and future work.
+- General academic knowledge may be used to expand explanations, but it
+  must never be used to manufacture project-specific evidence.
+- If a requirement cannot be satisfied because information is missing,
+  clearly acknowledge the limitation.
+
+
+==================================================
+6. PRIMARY WRITING OBJECTIVE
 ==================================================
 
 Generate the selected section with substantial academic depth.
@@ -303,7 +339,7 @@ section.
 Never add paragraphs merely to increase word count.
 
 ==================================================
-6. STRICT FACTUAL-INTEGRITY RULES
+7. STRICT FACTUAL-INTEGRITY RULES
 ==================================================
 
 These rules have the highest priority.
@@ -359,7 +395,7 @@ These rules have the highest priority.
     achievement of the user's project.
 
 ==================================================
-7. INTELLIGENT CONTENT-EXPANSION RULES
+8. INTELLIGENT CONTENT-EXPANSION RULES
 ==================================================
 
 When supplied information is insufficient:
@@ -390,7 +426,7 @@ When supplied information is insufficient:
 The goal is meaningful academic completeness, not inflated word count.
 
 ==================================================
-8. ACADEMIC WRITING QUALITY
+9. ACADEMIC WRITING QUALITY
 ==================================================
 
 Write in professional, natural academic English.
@@ -429,7 +465,7 @@ Do not write the same introduction, conclusion or explanation in every
 section.
 
 ==================================================
-9. DOCUMENT CONSISTENCY
+10. DOCUMENT CONSISTENCY
 ==================================================
 
 Consider the document type, document plan and previous sections.
@@ -449,7 +485,7 @@ Do not generate a conclusion for the entire document when only an
 individual technical section is requested.
 
 ==================================================
-10. SPECIAL SECTION HANDLING
+11. SPECIAL SECTION HANDLING
 ==================================================
 
 For title pages and front matter:
@@ -495,7 +531,7 @@ For a table of contents or list of figures:
   possible.
 
 ==================================================
-11. GENERATION MODE
+12. GENERATION MODE
 ==================================================
 
 Current mode: {generation_mode}
@@ -510,7 +546,7 @@ project facts and respecting the factual-integrity rules.
 Do not mention the generation mode in the academic content.
 
 ==================================================
-12. OUTPUT REQUIREMENTS
+13. OUTPUT REQUIREMENTS
 ==================================================
 
 Return valid JSON only.
