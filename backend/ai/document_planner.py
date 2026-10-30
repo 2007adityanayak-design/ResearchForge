@@ -340,6 +340,10 @@ Rules:
 - Do not convert future work into current implementation.
 - When implementation status is unclear, request clarification through missing_information.
 - Do not use words such as demonstrated, achieved, proved, validated, optimized, successful, significant, or effective without supporting evidence.
+- A user's statement that a feature works, a prototype functions, or a method was demonstrated must remain an attributed or reported claim unless the supplied evidence supports the stated level of verification.
+- Do not upgrade a reported claim into an independently established result through confident wording, technical explanation, or repetition in the abstract, results, discussion, or conclusion.
+- Keep implementation, operation, testing, validation, and measured effectiveness as separate claims; evidence for one does not automatically establish the others.
+- When implementation or test evidence is ambiguous, state what is documented and what remains unconfirmed instead of selecting the most optimistic interpretation.
 
 4. NUMERICAL AND EXPERIMENTAL INTEGRITY
 - Preserve all supplied numerical values, units, ranges, dates, percentages, measurements, and experimental conditions exactly when reporting them.
@@ -353,6 +357,10 @@ Rules:
 - If numerical data lacks units, labels, context, or an explanation, identify what is missing.
 - If values appear contradictory, preserve the original values and flag the specific contradiction rather than choosing one.
 - Distinguish measured values, calculated values, estimates, assumptions, and proposed targets whenever the supplied data makes that distinction possible.
+- Treat the presence of numbers as evidence only that numeric entries were supplied; numbers alone do not establish that measurements or experiments occurred.
+- Before describing any value as an experimental result, identify the supplied information that explicitly establishes what was measured, how it was measured, under which conditions, and what the value represents.
+- If the meaning or origin of a value cannot be established from the supplied data, preserve the value without assigning it a scientific meaning and list the exact clarification required.
+- Never convert sample numbers, placeholder values, demonstration data, table examples, or unexplained entries into research findings unless their role is explicitly established by the supplied data.
 
 5. METHODOLOGY AND TECHNICAL DETAILS
 - Include only methods, tools, materials, algorithms, components, configurations, and procedures supported by the project data.
@@ -376,6 +384,9 @@ Rules:
 - Do not claim that a figure proves a result unless the supplied evidence supports that interpretation.
 - Do not recommend the same figure in multiple sections unless there is a clear academic reason.
 - Never claim to have visually inspected an image if only its filename, identifier, or caption was supplied.
+- A figure caption may describe the intended subject, but it does not independently establish the image's actual contents or prove that a depicted process or outcome occurred.
+- Do not infer that a prototype was operational, a component was connected, a test was performed, or a result was obtained merely because a figure caption mentions it.
+- If the available figure metadata cannot establish a specific placement rationale, use a cautious rationale based only on known information or explicitly state that the purpose needs clarification.
 
 7. TABLE ACCURACY AND PLACEMENT
 - Reference only tables that actually exist in the supplied project data.
@@ -387,6 +398,10 @@ Rules:
 - Do not claim that a table supports a conclusion unless the supplied content supports it.
 - Never claim to have inspected table cells that were not included in the supplied data.
 - Recommend table placement based on the table's actual purpose, not simply because a results section exists.
+- Do not describe an unexplained table as trial data, experimental data, evaluation results, component specifications, or structural parameters unless the supplied table content explicitly establishes that purpose.
+- Do not infer a table's purpose from generic captions such as "Trial Table", sequential numbers, column count, or the existence of a Results section.
+- When table meaning is unknown, do not invent a placement reason that assumes what the data represents; identify the ambiguity and request the table title, column definitions, row labels, units, data source, and intended purpose as applicable.
+- If the table's purpose remains unknown, prefer a neutral placement recommendation or flag placement as requiring clarification rather than presenting a speculative explanation as fact.
 
 8. REFERENCES, CITATIONS, AND ATTRIBUTION
 - Never fabricate authors, paper titles, publication years, journals, conferences, DOIs, URLs, citations, standards, patents, or bibliographic entries.
@@ -586,11 +601,6 @@ PROJECT INFORMATION:
     except json.JSONDecodeError as exc:
         raise ValueError("Gemini returned invalid document plan JSON.") from exc
 
-    if not isinstance(result, dict):
-        raise ValueError("Gemini returned an unexpected document plan structure.")
-
-    validate_plan_structure(result)
-    return result
     if not isinstance(result, dict):
         raise ValueError("Gemini returned an unexpected document plan structure.")
 
