@@ -14,6 +14,7 @@ from database.database import engine, Base, SessionLocal
 from database.models import Project
 from ai.project_analyzer import analyze_project
 from ai.document_planner import plan_document
+from ai.document_generator import generate_document_section
 
 app = FastAPI(title="ResearchForge API")
 
@@ -103,6 +104,13 @@ class ResearchData(BaseModel):
 
 class DocumentSectionsData(BaseModel):
     sections: dict[str, str] = Field(default_factory=dict)
+
+
+class GenerateSectionData(BaseModel):
+    section: dict[str, Any]
+    document_plan: dict[str, Any] = Field(default_factory=dict)
+    previous_sections: dict[str, str] = Field(default_factory=dict)
+    generation_mode: str = "fill_empty"
 
 
 class FiguresData(BaseModel):
@@ -681,3 +689,120 @@ def plan_saved_document(project_id: int):
 
     finally:
         db.close()
+
+
+@app.post("/projects/{project_id}/generate-section")
+def generate_project_section(
+    project_id: int,
+    request: GenerateSectionData,
+):
+    db = SessionLocal()
+
+    try:
+        project = get_project_or_404(db, project_id)
+
+        project_data = {
+            "id": project.id,
+            "name": project.name,
+            "document_type": project.document_type,
+            "format_style": project.format_style,
+            "author_name": project.author_name or "",
+            "institution": project.institution or "",
+            "department": project.department or "",
+            "supervisor": project.supervisor or "",
+            "problem_statement": project.problem_statement or "",
+            "research_objectives": project.research_objectives or "",
+            "research_notes": project.research_notes or "",
+            "sections": load_json(project.document_sections, {}),
+            "figures": load_json(project.document_figures, []),
+            "tables": load_json(project.document_tables, []),
+        }
+
+        section = request.section
+        section_id = section.get("section_id", "").strip()
+
+        if not section_id:
+            raise HTTPException(
+                status_code=400,
+                detail="A valid section ID is required.",
+            )
+
+        try:
+            generated = generate_document_section(
+                project_data=project_data,
+                section=section,
+                document_plan=request.document_plan,
+                previous_sections=request.previous_sections,
+                generation_mode=request.generation_mode,
+            )
+
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=str(exc),
+            ) from exc
+
+        except Exception as exc:
+            print(
+                f"[SECTION GENERATOR] Project {project_id} failed: {exc}"
+            )
+            raise HTTPException(
+                status_code=502,
+                detail="The AI section-generation service is temporarily unavailable.",
+            ) from exc
+
+        current_sections = load_json(
+            project.document_sections,
+            {},
+        )
+
+        current_content = current_sections.get(section_id, "")
+
+        if request.generation_mode == "fill_empty" and current_content.strip():
+            raise HTTPException(
+                status_code=409,
+                detail="This section already contains content. Reload it before generating.",
+            )
+
+        if request.generation_mode == "regenerate" and not current_content.strip():
+            raise HTTPException(
+                status_code=409,
+                detail="This section is now empty. Reload it before regenerating.",
+            )
+
+        current_sections[section_id] = generated["content"]
+
+        project.document_sections = json.dumps(
+            current_sections,
+            ensure_ascii=False,
+        )
+
+        db.commit()
+
+        return {
+            "project_id": project.id,
+            "section_id": section_id,
+            "section_title": generated["section_title"],
+            "content": generated["content"],
+            "background_context": generated["background_context"],
+            "information_gaps": generated["information_gaps"],
+            "integrity_notes": generated["integrity_notes"],
+            "sections": current_sections,
+            "message": "Document section generated and saved successfully.",
+        }
+
+    except HTTPException:
+        db.rollback()
+        raise
+
+    except Exception as exc:
+        db.rollback()
+        print(f"[SECTION GENERATOR] Database error: {exc}")
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to save the generated document section.",
+        ) from exc
+
+    finally:
+        db.close()
+

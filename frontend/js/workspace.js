@@ -45,6 +45,10 @@ const aiAnalysisDetails = document.getElementById("ai-analysis-details");
 let currentProjectId = null;
 let currentDocumentType = null;
 
+let cachedGenerationPlan = null;
+let cachedGenerationPlanProjectId = null;
+
+
 let documentSections = {};
 let sectionSaveTimers = {};
 let sectionRetryTimers = {};
@@ -896,6 +900,36 @@ function getSectionPreview(content) {
         : normalized;
 }
 
+
+window.ResearchForgeWorkspace = {
+    get API_BASE_URL() { return API_BASE_URL; },
+    get currentProjectId() { return currentProjectId; },
+    get currentDocumentType() { return currentDocumentType; },
+    get currentSectionEditor() { return currentSectionEditor; },
+    get currentEditorElements() { return currentEditorElements; },
+    get navigationInProgress() { return navigationInProgress; },
+    set navigationInProgress(value) { navigationInProgress = value; },
+    get sectionSidebarList() { return sectionSidebarList; },
+    get sectionSaveTimers() { return sectionSaveTimers; },
+    get sectionRetryTimers() { return sectionRetryTimers; },
+    get documentSections() { return documentSections; },
+    get sectionVersions() { return sectionVersions; },
+    get sectionSavedVersions() { return sectionSavedVersions; },
+    get sectionSaveErrors() { return sectionSaveErrors; },
+    get sectionRetryAttempts() { return sectionRetryAttempts; },
+    get workspaceSaveStatus() { return workspaceSaveStatus; },
+    get documentConfigurations() { return documentConfigurations; },
+    get cachedGenerationPlan() { return cachedGenerationPlan; },
+    set cachedGenerationPlan(value) { cachedGenerationPlan = value; },
+    get cachedGenerationPlanProjectId() { return cachedGenerationPlanProjectId; },
+    set cachedGenerationPlanProjectId(value) { cachedGenerationPlanProjectId = value; },
+    apiRequest,
+    saveSectionAndWait,
+    saveLocalRecovery,
+    clearLocalRecoveryIfSaved,
+    updateSidebarContentIndicators,
+    showWorkspaceNotice
+};
 function openSectionEditor(section, allSections) {
     if (!sectionWorkspaceLayout || !sectionEditorContainer) {
         return;
@@ -948,7 +982,22 @@ function openSectionEditor(section, allSections) {
     const index = allSections.indexOf(section);
     counter.textContent = `Section ${index + 1} of ${allSections.length}`;
 
-    toolbar.append(backButton, counter);
+    const generateButton = document.createElement("button");
+    generateButton.type = "button";
+    generateButton.className = "workspace-action-btn";
+    generateButton.textContent = "✨ Generate with AI";
+
+    generateButton.addEventListener("click", () => {
+        window.ResearchForgeAIGeneration.generateCurrentDocumentSection(
+            section,
+            editor,
+            generateButton,
+            generationStatus,
+            generationDetails
+        );
+    });
+
+    toolbar.append(backButton, counter, generateButton);
 
     const title = document.createElement("h2");
     title.className = "document-section-editor-title";
@@ -958,6 +1007,16 @@ function openSectionEditor(section, allSections) {
     description.className = "document-section-editor-description";
     description.textContent =
         `Write and edit the content for ${section.toLowerCase()}. Your changes will save automatically.`;
+
+    const generationStatus = document.createElement("p");
+    generationStatus.className = "document-section-status";
+    generationStatus.setAttribute("role", "status");
+    generationStatus.setAttribute("aria-live", "polite");
+    generationStatus.hidden = true;
+
+    const generationDetails = document.createElement("div");
+    generationDetails.className = "ai-generation-details";
+    generationDetails.hidden = true;
 
     const editor = document.createElement("textarea");
     editor.className = "document-section-editor";
