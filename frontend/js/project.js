@@ -14,8 +14,9 @@ const authorNameInput = document.getElementById("author-name");
 const institutionInput = document.getElementById("institution");
 const departmentInput = document.getElementById("department");
 const supervisorInput = document.getElementById("supervisor");
-const documentModeSelect = document.getElementById("document-mode");
-const existingMaterialNotice = document.getElementById("existing-material-notice");
+const templateUploadGroup = document.getElementById("template-upload-group");
+const templateFileInput = document.getElementById("template-file");
+const templateFileName = document.getElementById("template-file-name");
 
 let isCreatingProject = false;
 
@@ -68,36 +69,54 @@ document.addEventListener("DOMContentLoaded", () => {
     projectNameInput.focus();
 
     projectNameInput.addEventListener("input", updateCharacterCount);
+    templateFileInput.addEventListener("change", updateTemplateFile);
     documentTypeSelect.addEventListener("change", updateFormattingOptions);
-    documentModeSelect.addEventListener("change", updateDocumentMode);
+    formatStyleSelect.addEventListener("change", updateTemplateVisibility);
     projectForm.addEventListener("submit", createProject);
 
-    updateDocumentMode();
+    updateFormattingOptions();
 });
+
+function updateTemplateFile() {
+    const file = templateFileInput.files[0];
+    templateFileName.replaceChildren();
+
+    if (!file) {
+        return;
+    }
+
+    const allowedExtensions = [".pdf", ".doc", ".docx"];
+    const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+
+    if (!allowedExtensions.includes(extension)) {
+        templateFileInput.value = "";
+        templateFileName.textContent = "Please select a PDF, DOC, or DOCX file.";
+        return;
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+        templateFileInput.value = "";
+        templateFileName.textContent = "Template files cannot exceed 15 MB.";
+        return;
+    }
+
+    const label = document.createElement("span");
+    label.textContent = `Selected: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.textContent = "Remove";
+    removeButton.style.marginLeft = "10px";
+    removeButton.addEventListener("click", () => {
+        templateFileInput.value = "";
+        templateFileName.replaceChildren();
+    });
+
+    templateFileName.append(label, removeButton);
+}
 
 function updateCharacterCount() {
     projectNameCount.textContent = `${projectNameInput.value.length}/150`;
-}
-
-function updateDocumentMode() {
-    const isConverting = documentModeSelect.value === "convert";
-
-    existingMaterialNotice.hidden = !isConverting;
-
-    if (isConverting) {
-        createProjectButton.innerHTML = "<span>Continue with existing material</span><span aria-hidden=\"true\">→</span>";
-        documentNextStep.textContent = "Create the destination document first. You can then add existing material in your workspace.";
-    } else {
-        createProjectButton.innerHTML = "<span>Create document</span><span aria-hidden=\"true\">→</span>";
-
-        const configuration = documentConfigurations[documentTypeSelect.value];
-
-        documentNextStep.textContent = configuration
-            ? configuration.nextStep
-            : "Your selected document type will determine the structure of your workspace. You can develop your document section by section.";
-    }
-
-    projectMessage.style.display = "none";
 }
 
 function updateFormattingOptions() {
@@ -120,11 +139,23 @@ function updateFormattingOptions() {
         formatStyleSelect.add(new Option(format.label, format.value));
     });
 
+    formatStyleSelect.add(new Option("Custom Template", "custom_template"));
+
     formatStyleSelect.disabled = false;
     formatHelper.textContent = configuration.description;
+    documentNextStep.textContent = configuration.nextStep;
+    updateTemplateVisibility();
+}
 
-    if (documentModeSelect.value !== "convert") {
-        documentNextStep.textContent = configuration.nextStep;
+function updateTemplateVisibility() {
+    const isCustomTemplate = formatStyleSelect.value === "custom_template";
+
+    templateUploadGroup.hidden = !isCustomTemplate;
+    templateFileInput.required = isCustomTemplate;
+
+    if (!isCustomTemplate) {
+        templateFileInput.value = "";
+        templateFileName.replaceChildren();
     }
 }
 
@@ -145,7 +176,6 @@ async function createProject(event) {
     const authorName = authorNameInput.value.trim();
     const documentType = documentTypeSelect.value;
     const formatStyle = formatStyleSelect.value;
-    const isConverting = documentModeSelect.value === "convert";
 
     if (!documentType) {
         showProjectMessage("Please select a document type.", "error");
@@ -156,6 +186,12 @@ async function createProject(event) {
     if (!formatStyle) {
         showProjectMessage("Please select a formatting style.", "error");
         formatStyleSelect.focus();
+        return;
+    }
+
+    if (formatStyle === "custom_template" && !templateFileInput.files[0]) {
+        showProjectMessage("Please upload a PDF or Word formatting template.", "error");
+        templateFileInput.focus();
         return;
     }
 
@@ -190,6 +226,9 @@ async function createProject(event) {
     formData.append("institution", institutionInput.value.trim());
     formData.append("department", departmentInput.value.trim());
     formData.append("supervisor", supervisorInput.value.trim());
+    if (templateFileInput.files[0]) {
+        formData.append("template_file", templateFileInput.files[0]);
+    }
 
     try {
         const response = await fetch(`${API_BASE_URL}/projects`, {
@@ -205,17 +244,8 @@ async function createProject(event) {
             );
         }
 
-        if (isConverting) {
-            sessionStorage.setItem(
-                `researchforge-conversion-${responseData.project_id}`,
-                "pending"
-            );
-        }
-
         showProjectMessage(
-            isConverting
-                ? "Destination document created! Opening your workspace..."
-                : "Document created successfully! Opening your workspace...",
+            "Document created successfully! Opening your workspace...",
             "success"
         );
 
@@ -231,7 +261,7 @@ async function createProject(event) {
         );
 
         createProjectButton.disabled = false;
-        updateDocumentMode();
+        createProjectButton.innerHTML = "<span>Create document</span><span aria-hidden=\"true\">&#8594;</span>";
     } finally {
         isCreatingProject = false;
     }

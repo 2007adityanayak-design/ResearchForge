@@ -1040,7 +1040,28 @@ function openSectionEditor(section, allSections) {
         );
     });
 
-    toolbar.append(backButton, counter, generateButton);
+    const fullDocumentButton = document.createElement("button");
+    fullDocumentButton.type = "button";
+    fullDocumentButton.className = "workspace-action-btn";
+    fullDocumentButton.textContent = "\u2728 Generate Full Document";
+    fullDocumentButton.title =
+        "Generate all recommended document sections using ResearchForge AI";
+
+    fullDocumentButton.addEventListener("click", () => {
+        window.ResearchForgeAIGeneration.generateFullDocument(
+            editor,
+            fullDocumentButton,
+            generationStatus,
+            generationDetails
+        );
+    });
+
+    toolbar.append(
+        backButton,
+        counter,
+        generateButton,
+        fullDocumentButton
+    );
 
     const title = document.createElement("h2");
     title.className = "document-section-editor-title";

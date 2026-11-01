@@ -8,6 +8,7 @@
     <meta name="description" content="Create a new academic document or prepare to convert existing research material with ResearchForge.">
     <title>Create Document | ResearchForge</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style3.css">
 </head>
 
 <body class="project-page">
@@ -18,7 +19,7 @@
             <span class="brand-name">ResearchForge</span>
         </a>
         <a href="dashboard.html" class="project-back-link">
-            <span>←</span>
+            <span>&larr;</span>
             Back to workspace
         </a>
     </header>
@@ -35,7 +36,7 @@
                 </div>
 
                 <div class="project-heading">
-                    <div class="project-heading-icon">＋</div>
+                    <div class="project-heading-icon">+</div>
                     <p class="page-eyebrow">GET STARTED</p>
                     <h1>Create a new document</h1>
                     <p class="project-description">
@@ -45,35 +46,7 @@
                 </div>
 
                 <form id="project-form" class="project-form">
-
-                    <div class="form-group">
-                        <label for="document-mode">
-                            How would you like to begin?
-                            <span class="required-mark">*</span>
-                        </label>
-                        <select id="document-mode" name="document_mode" required>
-                            <option value="new" selected>Create a new document</option>
-                            <option value="convert">Work with existing research material</option>
-                        </select>
-                        <div class="input-helper">
-                            <span>Choose whether to start fresh or work from existing material.</span>
-                        </div>
-                    </div>
-
-                    <div id="existing-material-notice" class="project-next-step" hidden>
-                        <div class="next-step-icon">↗</div>
-                        <div>
-                            <h3>Start with your existing material</h3>
-                            <p>
-                                Create the destination document first. You can then
-                                add your existing content in the workspace. File
-                                importing and automatic conversion will be added
-                                separately.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
+<div class="form-group">
                         <label for="document-type">
                             What do you want to create?
                             <span class="required-mark">*</span>
@@ -104,6 +77,19 @@
                         </div>
                     </div>
 
+                    <div class="form-group" id="template-upload-group" hidden>
+                        <label for="template-file">Upload your formatting template <span class="required-mark">*</span></label>
+                        <input
+                            type="file"
+                            id="template-file"
+                            name="template_file"
+                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        >
+                        <div class="input-helper">
+                            <span>Upload a PDF or Word document as a formatting reference. Maximum size: 15 MB.</span>
+                        </div>
+                        <div id="template-file-name" class="input-helper" aria-live="polite"></div>
+                    </div>
                     <div class="project-form-divider"></div>
 
                     <div class="form-group">
@@ -115,7 +101,7 @@
                             type="text"
                             id="project-name"
                             name="project_name"
-                            placeholder="e.g. Smart Air Purification using TiO₂"
+                            placeholder="e.g. Smart Air Purification using TiO&#8322;"
                             maxlength="150"
                             required
                             autocomplete="off"
@@ -182,7 +168,7 @@
                     <div class="project-form-divider"></div>
 
                     <div class="project-next-step">
-                        <div class="next-step-icon">✓</div>
+                        <div class="next-step-icon">&#10003;</div>
                         <div>
                             <h3>Your workspace, your document</h3>
                             <p id="document-next-step">
@@ -199,7 +185,7 @@
                         <a href="dashboard.html" class="project-cancel-btn">Cancel</a>
                         <button type="submit" id="create-project-btn" class="project-submit-btn">
                             <span>Create document</span>
-                            <span aria-hidden="true">→</span>
+                            <span aria-hidden="true">&rarr;</span>
                         </button>
                     </div>
 
@@ -220,21 +206,21 @@
 
                     <div class="project-benefits">
                         <div class="project-benefit">
-                            <span class="benefit-check">✓</span>
+                            <span class="benefit-check">&#10003;</span>
                             <div>
                                 <h3>Choose your document</h3>
                                 <p>Create a report, research paper, review paper, or thesis.</p>
                             </div>
                         </div>
                         <div class="project-benefit">
-                            <span class="benefit-check">✓</span>
+                            <span class="benefit-check">&#10003;</span>
                             <div>
                                 <h3>Use the right format</h3>
                                 <p>Select a suitable academic formatting style.</p>
                             </div>
                         </div>
                         <div class="project-benefit">
-                            <span class="benefit-check">✓</span>
+                            <span class="benefit-check">&#10003;</span>
                             <div>
                                 <h3>Keep everything organized</h3>
                                 <p>Build your document in a dedicated workspace.</p>
@@ -245,7 +231,7 @@
                 </div>
 
                 <div class="project-info-footer">
-                    ResearchForge <span>·</span> Built for academic work
+                    ResearchForge <span>&#183;</span> Built for academic work
                 </div>
 
             </aside>
@@ -258,3 +244,5 @@
 </body>
 
 </html>
+
+

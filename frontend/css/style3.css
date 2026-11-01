@@ -1654,3 +1654,192 @@
     }
 }
 
+
+/* Document editor toolbar counter alignment */
+.document-section-editor-toolbar > .document-section-counter {
+    align-self: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0 13px !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+}
+
+
+/* Fix document editor toolbar button alignment */
+.document-section-editor-toolbar > .workspace-action-btn {
+    margin: 0 !important;
+    align-self: center;
+}
+
+
+
+/* Create Document - spacious form layout */
+
+.project-page .project-main {
+    padding: 54px 30px 70px;
+}
+
+.project-page .project-layout {
+    max-width: 1180px;
+    gap: 30px;
+}
+
+.project-page .project-form-panel {
+    padding: 40px;
+}
+
+.project-page .project-form {
+    margin-top: 38px;
+    gap: 25px;
+}
+
+.project-page .form-group {
+    gap: 11px;
+}
+
+.project-page .form-group label {
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.project-page .form-group input:not([type="file"]),
+.project-page .form-group select {
+    width: 100%;
+    min-height: 54px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.project-page .form-group select {
+    cursor: pointer;
+}
+
+.project-page .form-group input[type="file"] {
+    width: 100%;
+    min-height: 58px;
+    padding: 14px;
+    border: 1px dashed var(--color-primary-border);
+    border-radius: 10px;
+    background: var(--color-soft);
+    color: var(--color-text);
+    font-size: 14px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.project-page .form-group input[type="file"]::file-selector-button {
+    margin-right: 14px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-primary-border);
+    border-radius: 8px;
+    background: var(--color-primary-light);
+    color: var(--color-text);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.project-page .input-helper {
+    font-size: 13px;
+    line-height: 1.75;
+}
+
+.project-page .project-form-divider {
+    margin: 8px 0;
+}
+
+.project-page .project-next-step {
+    padding: 20px;
+    gap: 15px;
+}
+
+.project-page .next-step-icon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    font-size: 17px;
+}
+
+.project-page .project-next-step h3 {
+    font-size: 15px;
+}
+
+.project-page .project-next-step p {
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.project-page .project-actions {
+    margin-top: 30px;
+    gap: 14px;
+}
+
+.project-page .project-cancel-btn,
+.project-page .project-submit-btn {
+    min-height: 50px;
+    padding: 13px 21px;
+    border-radius: 9px;
+    font-size: 14px;
+}
+
+.project-page .project-info-panel {
+    padding: 34px;
+}
+
+.project-page .project-benefits {
+    gap: 25px;
+}
+
+.project-page .project-benefit {
+    gap: 14px;
+}
+
+.project-page .project-benefit h3 {
+    font-size: 15px;
+}
+
+.project-page .project-benefit p {
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.project-page [hidden] {
+    display: none !important;
+}
+
+@media (max-width: 900px) {
+    .project-page .project-main {
+        padding: 30px 18px 45px;
+    }
+
+    .project-page .project-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .project-page .project-form-panel,
+    .project-page .project-info-panel {
+        padding: 23px;
+    }
+
+    .project-page .project-form {
+        gap: 21px;
+    }
+
+    .project-page .project-actions {
+        flex-direction: column-reverse;
+    }
+
+    .project-page .project-cancel-btn,
+    .project-page .project-submit-btn {
+        width: 100%;
+    }
+}

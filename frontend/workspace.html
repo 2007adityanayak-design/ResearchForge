@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -79,6 +79,33 @@
                     <span class="document-information-label">Guide / Supervisor</span>
                     <p id="workspace-supervisor">Not provided</p>
                 </div>
+            </div>
+        </section>
+        <section class="workspace-section" id="custom-template-section">
+            <div class="workspace-section-heading">
+                <div>
+                    <h2>Custom Formatting Template</h2>
+                    <p>Manage the PDF or Word document used as your formatting reference.</p>
+                </div>
+            </div>
+
+            <div id="custom-template-status" role="status" aria-live="polite">
+                Loading template information...
+            </div>
+
+            <div id="custom-template-details" hidden>
+                <p id="custom-template-name"></p>
+                <div class="workspace-actions">
+                    <a id="custom-template-open" class="workspace-action-btn" target="_blank" rel="noopener">Open Template</a>
+                    <button type="button" id="custom-template-remove" class="workspace-action-btn">Remove Template</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="custom-template-file">Upload or replace formatting template</label>
+                <input type="file" id="custom-template-file" accept=".pdf,.doc,.docx">
+                <p class="input-helper">PDF, DOC or DOCX. Maximum size: 15 MB.</p>
+                <button type="button" id="custom-template-upload" class="workspace-action-btn">Upload Template</button>
             </div>
         </section>
         <section class="workspace-section" id="ai-analysis-section">
@@ -300,7 +327,10 @@
     <script src="js/workspace.js"></script>
     <script src="js/ai-generation.js"></script>
     <script src="js/workspace2.js"></script>
+    <script src="js/template-manager.js"></script>
 
 </body>
 
 </html>
+
+

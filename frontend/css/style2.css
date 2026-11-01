@@ -259,7 +259,9 @@
 .document-section-counter {
     display: inline-flex;
     align-items: center;
-    min-height: 38px;
+    align-self: center;
+    min-height: 44px;
+    line-height: 1.2;
     padding: 8px 13px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-small);

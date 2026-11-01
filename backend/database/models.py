@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text
+﻿from sqlalchemy import Column, Integer, String, Text
 from database.database import Base
 
 
@@ -29,3 +29,6 @@ class Project(Base):
     document_sections = Column(Text, default="{}")
     document_figures = Column(Text, default="[]")
     document_tables = Column(Text, default="[]")
+    template_file_path = Column(String(500), default="")
+    template_file_name = Column(String(255), default="")
+

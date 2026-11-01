@@ -1,3 +1,4 @@
+import re
 import json
 import os
 import random
@@ -51,7 +52,152 @@ def enforce_evidence_findings(
     return plan
 
 
-def validate_plan_structure(result: dict[str, Any]) -> None:
+
+def ensure_empty_template_coverage(
+    result: dict[str, Any],
+    project_data: dict[str, Any] | None,
+) -> None:
+    """Add omitted empty academic template sections without inventing facts."""
+
+    project_data = project_data or {}
+    existing_sections = project_data.get("sections", {})
+
+    if not isinstance(existing_sections, dict):
+        return
+
+    recommendations = result.get("recommended_sections", [])
+
+    if not isinstance(recommendations, list):
+        return
+
+    def normalize(value: str) -> str:
+        value = re.sub(r"^\s*\d+(?:\.\d+)*\s*[-.:)]\s*", "", value)
+        value = value.replace("&", "and")
+        return re.sub(r"[^a-z0-9]", "", value.casefold())
+
+    excluded_exact = {
+        "certificate",
+        "declaration",
+        "acknowledgement",
+        "acknowledgements",
+        "acknowledgment",
+        "acknowledgments",
+        "titlepage",
+        "title",
+        "coverpage",
+        "tableofcontents",
+        "contents",
+        "listoffigures",
+        "listoftables",
+        "listofabbreviations",
+        "listofsymbols",
+        "bibliography",
+    }
+
+    def is_academic_section(title: str) -> bool:
+        normalized = normalize(title)
+
+        if not normalized or normalized in excluded_exact:
+            return False
+
+        excluded_prefixes = (
+            "certificate",
+            "declaration",
+            "acknowledgement",
+            "acknowledgment",
+            "titlepage",
+            "coverpage",
+            "tableofcontents",
+            "listoffigures",
+            "listoftables",
+            "listofabbreviations",
+            "listofsymbols",
+        )
+
+        if normalized.startswith(excluded_prefixes):
+            return False
+
+        return True
+
+    represented = {
+        normalize(section.get("title", ""))
+        for section in recommendations
+        if isinstance(section, dict)
+        and isinstance(section.get("title"), str)
+    }
+
+    used_ids = {
+        section.get("section_id", "").strip().casefold()
+        for section in recommendations
+        if isinstance(section, dict)
+        and isinstance(section.get("section_id"), str)
+    }
+
+    added = []
+
+    for title, content in existing_sections.items():
+        if not isinstance(title, str) or not title.strip():
+            continue
+
+        if not isinstance(content, str) or content.strip():
+            continue
+
+        if not is_academic_section(title):
+            continue
+
+        normalized_title = normalize(title)
+
+        if normalized_title in represented:
+            continue
+
+        base_id = re.sub(r"[^a-z0-9]+", "_", title.casefold()).strip("_")
+        section_id = base_id or "academic_section"
+        suffix = 2
+
+        while section_id.casefold() in used_ids:
+            section_id = f"{base_id}_{suffix}"
+            suffix += 1
+
+        added.append({
+            "section_id": section_id,
+            "title": title,
+            "purpose": (
+                f"Develop the academic content required for the '{title}' "
+                "section using the supplied project information while "
+                "preserving factual accuracy and research integrity."
+            ),
+            "key_points": [
+                f"Explain the aspects of the project relevant to {title}.",
+                "Use only project-specific facts supported by the supplied data.",
+                "Distinguish completed work from proposed work and future plans.",
+                "Identify limitations, uncertainties, and unsupported details.",
+            ],
+            "source_fields": ["sections"],
+            "required_information": [
+                "Identify any information needed for this section that is "
+                "not available in the supplied project data.",
+                "Do not invent missing project-specific facts, measurements, "
+                "methods, results, or references.",
+            ],
+            "suggested_word_count": 500,
+        })
+
+        represented.add(normalized_title)
+        used_ids.add(section_id.casefold())
+
+    if added:
+        result["recommended_sections"].extend(added)
+        print(
+            f"[AI PLANNER] Added {len(added)} omitted empty academic "
+            "template section(s): "
+            + ", ".join(section["title"] for section in added)
+        )
+
+
+def validate_plan_structure(
+    result: dict[str, Any],
+    project_data: dict[str, Any] | None = None,
+) -> None:
     required_keys = {
         "document_title",
         "document_type",
@@ -100,6 +246,60 @@ def validate_plan_structure(result: dict[str, Any]) -> None:
             "The document plan must contain at least one recommended section."
         )
 
+    # Match recommendations to existing template titles wherever possible.
+    existing_sections = (project_data or {}).get("sections", {})
+    if not isinstance(existing_sections, dict):
+        existing_sections = {}
+
+    def normalize_template_title(value: str) -> str:
+        import re
+
+        value = re.sub(r"^\s*\d+(?:\.\d+)*\s*[-.:)]\s*", "", value)
+        value = value.replace("&", "and")
+        return re.sub(r"[^a-z0-9]", "", value.casefold())
+
+    template_title_lookup = {
+        normalize_template_title(title): title
+        for title in existing_sections
+        if isinstance(title, str) and title.strip()
+    }
+
+    # Normalize template titles and map recommendations to their exact
+    # existing template titles wherever an exact normalized match exists.
+    for section in result["recommended_sections"]:
+        if not isinstance(section, dict):
+            continue
+
+        title = section.get("title")
+        if isinstance(title, str):
+            exact_title = template_title_lookup.get(
+                normalize_template_title(title)
+            )
+            if exact_title:
+                section["title"] = exact_title
+
+    # Prevent multiple recommendations from targeting the same template
+    # section, even when the AI supplies different section IDs.
+    mapped_template_sections = {}
+
+    for section in result["recommended_sections"]:
+        if not isinstance(section, dict):
+            continue
+
+        title = section.get("title")
+        if not isinstance(title, str):
+            continue
+
+        normalized_title = normalize_template_title(title)
+        if normalized_title in template_title_lookup:
+            existing_title = template_title_lookup[normalized_title]
+            if normalized_title in mapped_template_sections:
+                raise ValueError(
+                    "Multiple recommendations target the existing template "
+                    f"section '{existing_title}'. Keep only one recommendation."
+                )
+            mapped_template_sections[normalized_title] = section.get("section_id")
+
     section_ids = set()
     section_titles = set()
 
@@ -132,7 +332,7 @@ def validate_plan_structure(result: dict[str, Any]) -> None:
                 )
 
         section_id = section["section_id"].strip().casefold()
-        section_title = section["title"].strip().casefold()
+        section_title = normalize_template_title(section["title"])
 
         if section_id in section_ids:
             raise ValueError(f"Duplicate document section ID: {section['section_id']}")
@@ -184,8 +384,17 @@ def validate_plan_structure(result: dict[str, Any]) -> None:
                     f"{field} entry {index + 1} has invalid placement details."
                 )
 
-            if placement["recommended_section"].strip().casefold() not in (
-                section_titles | section_ids
+            recommended_reference = placement["recommended_section"].strip()
+
+            normalized_reference = normalize_template_title(
+                recommended_reference
+            )
+
+            normalized_id = recommended_reference.casefold()
+
+            if (
+                normalized_reference not in section_titles
+                and normalized_id not in section_ids
             ):
                 raise ValueError(
                     f"{field} entry {index + 1} references a section "
@@ -456,6 +665,23 @@ Rules:
 - Do not create acknowledgements naming people, organizations, institutions, or funding bodies unless those details are supplied.
 - If acknowledgement details are missing, recommend a placeholder or request the necessary information.
 
+9.1 EXISTING DOCUMENT TEMPLATE COVERAGE
+- Inspect the complete existing sections dictionary supplied in project data.
+- Treat its section titles as the actual document-template structure.
+- Identify every empty or whitespace-only existing section before recommending new sections.
+- Include every empty academic-content section that is appropriate for the selected document type in recommended_sections.
+- When an existing template section is appropriate, use its exact existing title as the recommended section title. Do not create a differently named duplicate for the same content.
+- Use a stable section_id that clearly identifies the existing template section.
+- Do not omit an empty academic section merely because it is not mentioned in the project notes.
+- Existing non-empty sections must not be recommended for replacement in fill-empty workflows.
+- Do not create duplicate recommendations for sections already represented by an existing template title.
+- Distinguish academic-content sections from structural or administrative document components.
+- Do not generate fabricated personal details, signatures, approvals, certificate numbers, institutional declarations, acknowledgements, funding details, or supervisor information.
+- For Certificate, Declaration, Acknowledgements, Title Page, and similar components, identify missing required details and use placeholders where appropriate rather than inventing information.
+- Table of Contents, List of Figures, List of Tables, and similar indexes should be generated from the final document structure and actual saved assets, not written as ordinary academic prose.
+- Do not recommend ordinary AI prose generation for automatically generated indexes.
+- Keep the document structure appropriate to the selected report or research-paper format.
+
 9. DOCUMENT STRUCTURE AND ACADEMIC CONVENTIONS
 - Adapt the recommended structure to the selected document type and formatting style.
 - Distinguish among project reports, original research papers, review papers, theses, and general academic reports.
@@ -646,7 +872,8 @@ PROJECT INFORMATION:
     if not isinstance(result, dict):
         raise ValueError("Gemini returned an unexpected document plan structure.")
 
-    validate_plan_structure(result)
+    ensure_empty_template_coverage(result, project_data)
+    validate_plan_structure(result, project_data)
     validate_plan_assets(result, project_data)
 
     enforce_evidence_findings(result, evidence_audit)
