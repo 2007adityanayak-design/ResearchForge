@@ -81,6 +81,7 @@ const documentConfigurations = {
             "Abstract",
             "Table of Contents",
             "List of Tables",
+            "List of Figures",
             "Introduction",
             "Problem Statement",
             "Objectives",
@@ -144,6 +145,7 @@ const documentConfigurations = {
             "Abstract",
             "Table of Contents",
             "List of Tables",
+            "List of Figures",
             "Introduction",
             "Literature Review",
             "Research Problem and Objectives",
@@ -956,9 +958,13 @@ window.ResearchForgeWorkspace = {
     get sectionSaveTimers() { return sectionSaveTimers; },
     get sectionRetryTimers() { return sectionRetryTimers; },
     get documentSections() { return documentSections; },
+    get documentFigures() { return documentFigures; },
+    get documentTables() { return documentTables; },
     get sectionVersions() { return sectionVersions; },
     get sectionSavedVersions() { return sectionSavedVersions; },
     get sectionSaveErrors() { return sectionSaveErrors; },
+    get sectionSaving() { return sectionSaving; },
+    get sectionSavePromises() { return sectionSavePromises; },
     get sectionRetryAttempts() { return sectionRetryAttempts; },
     get workspaceSaveStatus() { return workspaceSaveStatus; },
     get documentConfigurations() { return documentConfigurations; },
@@ -971,7 +977,11 @@ window.ResearchForgeWorkspace = {
     saveLocalRecovery,
     clearLocalRecoveryIfSaved,
     updateSidebarContentIndicators,
-    showWorkspaceNotice
+    showWorkspaceNotice,
+    refreshDocumentAssets: async function () {
+        await loadFigures();
+        await loadTables();
+    }
 };
 function openSectionEditor(section, allSections) {
     if (!sectionWorkspaceLayout || !sectionEditorContainer) {
@@ -1235,6 +1245,10 @@ function openSectionEditor(section, allSections) {
 
     sectionEditorContainer.appendChild(editorView);
 
+    window.dispatchEvent(new CustomEvent("researchforge:section-editor-opened", {
+        detail: { section, editorView, editor }
+    }));
+
     currentEditorElements = {
         editor,
         saveStatus,
@@ -1290,11 +1304,13 @@ async function navigateToSection(targetSection) {
     }
 
     try {
-        const saved = await saveSectionAndWait(
-            sourceSection,
-            editor,
-            saveStatus
-        );
+        const isAssetIndexSection =
+            sourceSection === "List of Figures" ||
+            sourceSection === "List of Tables";
+
+        const saved = isAssetIndexSection
+            ? true
+            : await saveSectionAndWait(sourceSection, editor, saveStatus);
 
         if (!saved) {
             showWorkspaceNotice(
@@ -1354,7 +1370,13 @@ async function closeSectionEditor() {
     });
 
     try {
-        const saved = await saveSectionAndWait(section, editor, saveStatus);
+        const isAssetIndexSection =
+            section === "List of Figures" ||
+            section === "List of Tables";
+
+        const saved = isAssetIndexSection
+            ? true
+            : await saveSectionAndWait(section, editor, saveStatus);
 
         if (!saved) {
             showWorkspaceNotice(
@@ -2352,3 +2374,4 @@ function showError(message) {
         sectionWorkspaceLayout.style.display = "none";
     }
 }
+

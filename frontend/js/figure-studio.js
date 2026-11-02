@@ -1,4 +1,4 @@
-console.log("ResearchForge Figure Studio loaded");
+﻿console.log("ResearchForge Figure Studio loaded");
 
 const FIGURE_STUDIO_API = "http://127.0.0.1:8000";
 const figureStudioParams = new URLSearchParams(window.location.search);
@@ -128,7 +128,7 @@ function figureStudioUpdatePreview() {
     if (!imageUrl) {
         figureStudioPreview.innerHTML = `
             <div class="figure-studio-empty-preview">
-                <div class="figure-studio-empty-icon">▧</div>
+                <div class="figure-studio-empty-icon">â–§</div>
                 <h3>Your figure will appear here</h3>
                 <p>Upload an image and select Preview Figure to get started.</p>
             </div>
@@ -272,6 +272,73 @@ async function figureStudioLoadProject() {
         } catch (error) {
             console.warn("Unable to load document sections:", error);
         }
+    }
+
+    if (figureStudioSections.length === 0) {
+        const defaultSections = {
+            project_report: [
+                "Introduction",
+                "Problem Statement",
+                "Objectives",
+                "Literature Review",
+                "Methodology",
+                "System Design and Architecture",
+                "Implementation",
+                "Results and Discussion",
+                "Conclusion",
+                "Future Scope",
+                "References",
+                "Appendices"
+            ],
+            research_paper: [
+                "Introduction",
+                "Related Work",
+                "Methodology",
+                "Proposed Approach",
+                "Experimental Setup",
+                "Results and Discussion",
+                "Conclusion",
+                "References"
+            ],
+            review_paper: [
+                "Introduction",
+                "Review Scope and Methodology",
+                "Literature Classification",
+                "Comparative Analysis",
+                "Research Gaps",
+                "Challenges and Open Problems",
+                "Future Research Directions",
+                "Conclusion",
+                "References"
+            ],
+            thesis: [
+                "Introduction",
+                "Literature Review",
+                "Research Problem and Objectives",
+                "Research Questions or Hypotheses",
+                "Research Methodology",
+                "Results and Analysis",
+                "Discussion",
+                "Conclusion",
+                "Limitations",
+                "Future Scope",
+                "References",
+                "Appendices"
+            ],
+            academic_report: [
+                "Introduction",
+                "Background",
+                "Objectives",
+                "Main Content",
+                "Analysis and Discussion",
+                "Conclusion",
+                "Recommendations",
+                "References",
+                "Appendices"
+            ]
+        };
+
+        figureStudioSections = defaultSections[documentType] || [];
     }
 
     figureStudioRenderSections();
@@ -476,11 +543,78 @@ function figureStudioResetForm() {
     figureStudioIsPreviewReady = false;
 
     figureStudioForm.reset();
+    if (figureStudioSections.length === 0) {
+        const defaultSections = {
+            project_report: [
+                "Introduction",
+                "Problem Statement",
+                "Objectives",
+                "Literature Review",
+                "Methodology",
+                "System Design and Architecture",
+                "Implementation",
+                "Results and Discussion",
+                "Conclusion",
+                "Future Scope",
+                "References",
+                "Appendices"
+            ],
+            research_paper: [
+                "Introduction",
+                "Related Work",
+                "Methodology",
+                "Proposed Approach",
+                "Experimental Setup",
+                "Results and Discussion",
+                "Conclusion",
+                "References"
+            ],
+            review_paper: [
+                "Introduction",
+                "Review Scope and Methodology",
+                "Literature Classification",
+                "Comparative Analysis",
+                "Research Gaps",
+                "Challenges and Open Problems",
+                "Future Research Directions",
+                "Conclusion",
+                "References"
+            ],
+            thesis: [
+                "Introduction",
+                "Literature Review",
+                "Research Problem and Objectives",
+                "Research Questions or Hypotheses",
+                "Research Methodology",
+                "Results and Analysis",
+                "Discussion",
+                "Conclusion",
+                "Limitations",
+                "Future Scope",
+                "References",
+                "Appendices"
+            ],
+            academic_report: [
+                "Introduction",
+                "Background",
+                "Objectives",
+                "Main Content",
+                "Analysis and Discussion",
+                "Conclusion",
+                "Recommendations",
+                "References",
+                "Appendices"
+            ]
+        };
+
+        figureStudioSections = defaultSections[documentType] || [];
+    }
+
     figureStudioRenderSections();
 
     figureStudioPreview.innerHTML = `
         <div class="figure-studio-empty-preview">
-            <div class="figure-studio-empty-icon">▧</div>
+            <div class="figure-studio-empty-icon">â–§</div>
             <h3>Your figure will appear here</h3>
             <p>Upload an image and select Preview Figure to get started.</p>
         </div>

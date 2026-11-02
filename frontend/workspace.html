@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/style3.css">
     <link rel="stylesheet" href="css/style4.css">
     <link rel="stylesheet" href="css/quality-report.css">
+    <link rel="stylesheet" href="css/generate-document.css">
 </head>
 
 <body class="workspace-page">
@@ -316,6 +317,26 @@
             </div>
         </section>
 
+        <section class="workspace-section" id="generate-document-section">
+            <div class="generate-document-panel">
+                <div class="generate-document-content">
+                    <span class="generate-document-label">Final document</span>
+                    <h2>Your document is ready for generation</h2>
+                    <p>
+                        Generate a complete document using your project information,
+                        sections, figures, tables, and research material. You can
+                        review and edit the generated document on the next page.
+                    </p>
+                </div>
+
+                <button type="button" id="generate-document-btn" class="generate-document-btn">
+                    <span>Generate Document</span>
+                    <span aria-hidden="true">?</span>
+                </button>
+
+                <p id="generate-document-status" class="generate-document-status" role="status" aria-live="polite"></p>
+            </div>
+        </section>
         <section id="workspace-error" class="workspace-error" hidden>
             <h2>Unable to open document</h2>
             <p id="workspace-error-message">Please try again.</p>
@@ -328,7 +349,10 @@
     <script src="js/ai-generation.js"></script>
     <script src="js/workspace2.js"></script>
     <script src="js/template-manager.js"></script>
+    <script src="js/document-asset-indexes.js"></script>
+    <script src="js/document-body-assets.js"></script>
 
+    <script src="js/generate-document.js"></script>
 </body>
 
 </html>

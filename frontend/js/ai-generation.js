@@ -1432,6 +1432,7 @@ function showRegenerationConfirmation(section) {
 
     window.ResearchForgeAIGeneration = {
         generateCurrentDocumentSection,
-        generateFullDocument
+        generateFullDocument,
+        showFullDocumentModeConfirmation
     };
 })();

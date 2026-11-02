@@ -1,11 +1,52 @@
 ﻿from typing import Any
+from pathlib import Path
 import re
 
 from ai.document_planner import plan_document
 from ai.document_generator import generate_document_section
 from ai.evidence_auditor import audit_project_evidence
+from ai.template_reader import read_document_template, TemplateReadError
 
 
+
+
+
+def _load_template_guidance(project_data: dict[str, Any]) -> dict[str, Any] | None:
+    relative_path = project_data.get("template_file_path")
+
+    if not relative_path:
+        return None
+
+    if not isinstance(relative_path, str):
+        raise TemplateReadError("Invalid uploaded template file path.")
+
+    backend_root = Path(__file__).resolve().parents[1]
+    template_directory = (backend_root / "uploads" / "templates").resolve()
+    candidate = (backend_root / "uploads" / relative_path).resolve()
+
+    if candidate.parent != template_directory:
+        raise TemplateReadError("The uploaded template path is invalid.")
+
+    template_data = read_document_template(str(candidate))
+
+    allowed_fields = (
+        "source_format",
+        "page_count",
+        "character_count",
+        "outline",
+        "table_patterns",
+        "table_caption_examples",
+        "figure_caption_examples",
+        "formatting_guidance",
+        "usage_rules",
+        "extraction_warning",
+    )
+
+    return {
+        key: template_data[key]
+        for key in allowed_fields
+        if key in template_data
+    }
 
 
 def normalize_section_key(value: str) -> str:
@@ -29,7 +70,13 @@ def generate_full_document(
     if not project_id:
         raise ValueError("A valid project ID is required.")
 
-    document_plan = plan_document(project_data)
+    generation_project_data = project_data.copy()
+    template_guidance = _load_template_guidance(generation_project_data)
+
+    if template_guidance:
+        generation_project_data["template_guidance"] = template_guidance
+
+    document_plan = plan_document(generation_project_data)
 
     if not isinstance(document_plan, dict):
         raise ValueError("Invalid document plan.")
@@ -164,7 +211,7 @@ def generate_full_document(
 
         try:
             result = generate_document_section(
-                project_data=project_data,
+                project_data=generation_project_data,
                 section=section,
                 document_plan=document_plan,
                 previous_sections=previous_sections.copy(),

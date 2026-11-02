@@ -38,6 +38,8 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
     status_patterns = {
         "automatic_operation": (
             r"\bautomatically activates?\b",
+            r"\boperates?\s+automatically\b",
+            r"\bautomatic(?:\s+operation)?\b",
             r"\bautomated operation\b",
             r"\bautomatic switching\b",
             r"\bautomatic(?:ally)? controlled\b",
@@ -47,6 +49,9 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
         ),
         "manual_operation": (
             r"\boperates? in manual mode\b",
+            r"\bmanually operated\b",
+            r"\boperates? manually\b",
+            r"\bmanual operation\b",
             r"\bmanually activated\b",
             r"\bmanual(?:ly)? controlled\b",
             r"\bdirect manual control\b",
@@ -85,6 +90,62 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
             ),
         )
 
+
+    automatic_evidence: dict[str, list[tuple[str, str]]] = {
+        "implemented": [],
+        "not_implemented": [],
+    }
+
+    automatic_status_patterns = (
+        r"\bnot implemented\b",
+        r"\bnot yet implemented\b",
+        r"\bhas not been implemented\b",
+        r"\bnot currently used\b",
+        r"\bnot part of the current prototype\b",
+    )
+
+    for title, content in normalized_sections.items():
+        for sentence in re.split(r"(?<=[.!?])\s+|\n+", content):
+            sentence = sentence.strip()
+
+            if not sentence or not any(
+                re.search(pattern, sentence, re.IGNORECASE)
+                for pattern in status_patterns["automatic_operation"]
+            ):
+                continue
+
+            if any(
+                re.search(pattern, sentence, re.IGNORECASE)
+                for pattern in automatic_status_patterns
+            ):
+                automatic_evidence["not_implemented"].append((title, sentence))
+            elif re.search(
+                r"\bprototype operates?\s+automatically\b|\bprototype uses automatic operation\b|\bautomatic operation is implemented\b|\boperates?\s+automatically\b",
+                sentence,
+                re.IGNORECASE,
+            ):
+                automatic_evidence["implemented"].append((title, sentence))
+
+    if all(automatic_evidence.values()):
+        locations = list(dict.fromkeys(
+            [title for title, _ in automatic_evidence["implemented"]]
+            + [title for title, _ in automatic_evidence["not_implemented"]]
+        ))
+
+        add_issue(
+            "implementation_status",
+            "high",
+            ", ".join(locations),
+            (
+                "Automatic operation is described as both implemented and "
+                "not implemented in different statements."
+            ),
+            (
+                "Verify the actual prototype configuration and distinguish "
+                "implemented, tested, and proposed automatic-operation features."
+            ),
+        )
+
     # ---------------------------------------------------------
     # 2. Detect hardware and power-source status conflicts.
     # ---------------------------------------------------------
@@ -93,7 +154,7 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
         "solar_power": (
             r"\bsolar panel\b",
             r"\bphotovoltaic\b",
-            r"\bsolar powered\b",
+            r"\bsolar[\s-]+powered\b",
             r"\bsolar energy harvesting\b",
         ),
         "rechargeable_storage": (
@@ -138,6 +199,8 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
 
     current_patterns = (
         r"\bcurrently uses\b",
+        r"\bcurrent prototype uses\b",
+        r"\bcurrent prototype includes\b",
         r"\bis currently used\b",
         r"\bis implemented\b",
         r"\bhas been implemented\b",
@@ -456,6 +519,138 @@ def audit_project_evidence(project_data: dict[str, Any]) -> list[dict[str, str]]
                 label,
                 f"The project has no saved {label.casefold()}.",
                 recommendation,
+            )
+
+
+    # ---------------------------------------------------------
+    # 7. Detect numerical claims unsupported by original inputs.
+    # ---------------------------------------------------------
+
+    numeric_unit_pattern = re.compile(
+        r"(?<![A-Za-z0-9])"
+        r"(-?\d+(?:,\d{3})*(?:\.\d+)?)"
+        r"\s*"
+        r"(nm|um|mm|cm|km|kg|mg|g|ml|l|kw|mw|w|mah|ah|"
+        r"kv|mv|v|ma|a|kwh|wh|deg\s*c|seconds?|secs?|"
+        r"minutes?|mins?|hours?|hrs?|days?|%|percent)"
+        r"\b",
+        re.IGNORECASE,
+    )
+
+    def extract_numeric_units(value: Any) -> set[tuple[float, str]]:
+        if not isinstance(value, str):
+            value = str(value)
+
+        extracted = set()
+
+        for match in numeric_unit_pattern.finditer(value):
+            try:
+                number = float(match.group(1).replace(",", ""))
+            except ValueError:
+                continue
+
+            unit = re.sub(r"\s+", "", match.group(2).casefold())
+            unit_aliases = {
+                "um": "um",
+                "degc": "?c",
+                "secs": "second",
+                "sec": "second",
+                "seconds": "second",
+                "mins": "minute",
+                "min": "minute",
+                "minutes": "minute",
+                "hrs": "hour",
+                "hr": "hour",
+                "hours": "hour",
+                "days": "day",
+                "percent": "%",
+            }
+            unit = unit_aliases.get(unit, unit)
+            extracted.add((number, unit))
+
+        return extracted
+
+    source_parts = []
+
+    for field in (
+        "problem_statement",
+        "research_objectives",
+        "research_notes",
+        "name",
+        "author_name",
+        "institution",
+        "department",
+    ):
+        value = project_data.get(field, "")
+        if isinstance(value, str) and value.strip():
+            source_parts.append(value)
+
+    if isinstance(figures, list):
+        for figure in figures:
+            if isinstance(figure, dict):
+                source_parts.extend(
+                    str(figure.get(field, "") or "")
+                    for field in ("caption", "description")
+                )
+
+    if isinstance(tables, list):
+        for table in tables:
+            if not isinstance(table, dict):
+                continue
+
+            source_parts.extend(
+                str(table.get(field, "") or "")
+                for field in ("caption", "description")
+            )
+
+            table_content = table.get("content", "")
+            if isinstance(table_content, str):
+                try:
+                    table_content = json.loads(table_content)
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+            source_parts.append(
+                json.dumps(table_content, ensure_ascii=False)
+                if isinstance(table_content, (dict, list))
+                else str(table_content or "")
+            )
+
+    source_numeric_units = set()
+
+    for source_part in source_parts:
+        source_numeric_units.update(
+            extract_numeric_units(source_part)
+        )
+
+    for title, content in normalized_sections.items():
+        unsupported_values = (
+            extract_numeric_units(content) - source_numeric_units
+        )
+
+        if unsupported_values:
+            formatted_values = ", ".join(
+                f"{number:g} {unit}"
+                for number, unit in sorted(unsupported_values)
+            )
+
+            add_issue(
+                "numerical_integrity",
+                "medium",
+                title,
+                (
+                    "The section contains numerical values with units that "
+                    "could not be matched to the original project fields, "
+                    "figure metadata, or table data: "
+                    f"{formatted_values}. This does not establish that the "
+                    "values are incorrect."
+                ),
+                (
+                    "Verify each value against original measurements, "
+                    "technical specifications, calculations, or a reliable "
+                    "external academic source. Add its provenance before "
+                    "presenting it as an established project fact."
+                ),
             )
 
     return issues

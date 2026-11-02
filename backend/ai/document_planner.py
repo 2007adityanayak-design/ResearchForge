@@ -682,6 +682,54 @@ Rules:
 - Do not recommend ordinary AI prose generation for automatically generated indexes.
 - Keep the document structure appropriate to the selected report or research-paper format.
 
+TEMPLATE-TO-PROJECT SECTION MAPPING
+
+- Treat template_guidance.outline as the uploaded template's structural reference, not as a list of sections already saved in the project.
+- Compare the uploaded outline with project_data.sections before constructing recommended_sections.
+- Create an explicit conceptual mapping between relevant template headings and the appropriate project sections.
+- Preserve the template's chapter and subsection hierarchy wherever compatible with the selected document type and project scope.
+- When adapting a heading, retain its original academic purpose while using terminology appropriate to the actual project.
+- Distinguish three cases: an existing populated project section, an existing empty project section, and a heading that exists only in the uploaded template.
+- Never claim that a template-only heading already contains saved project content.
+- For a template-only heading, recommend a corresponding section when academically relevant and appropriate for the project.
+- For an existing populated section, preserve its content and do not recommend replacing it in fill_empty mode.
+- For an existing empty section, recommend generating it when relevant.
+- Match headings semantically, not only by exact wording. For example, Software Implementation may fulfil the structural purpose of an adapted Hardware Implementation heading.
+- Do not create separate recommendations for two headings that represent the same academic content.
+- Do not discard meaningful template sections without evaluating their relevance.
+- Do not force irrelevant template sections into the final document merely to reproduce the original outline.
+- Keep chapter numbering and subsection numbering logically consistent after additions, adaptations, or exclusions.
+- Do not infer implementation, testing, validation, feasibility, research findings, or completed project activities from the existence of corresponding template headings.
+- If a template heading cannot be mapped confidently, identify the ambiguity rather than inventing a mapping.
+- Ensure recommended_sections, writing_guidelines, and integrity_requirements consistently reflect the final adapted structure.
+
+9.2 UPLOADED DOCUMENT TEMPLATE GUIDANCE
+- Check whether the supplied project data contains a template_guidance object.
+- If template_guidance is available, use its outline as the primary reference for the uploaded document's heading hierarchy and organizational structure.
+- Consider the template's heading order, numbering, heading levels, table patterns, figure caption patterns, and formatting guidance when constructing the document plan.
+- Preserve the template's recognizable academic organization wherever it is appropriate for the selected document type and project scope.
+- Do not blindly reproduce every heading. Evaluate each heading for relevance, necessity, and compatibility with the current project.
+- Adapt headings to the actual project domain while preserving their academic purpose and structural role.
+- For software-only projects, replace hardware-specific headings with appropriate software engineering equivalents wherever necessary.
+- Examples of appropriate adaptations include Hardware Requirements to Software Requirements, Hardware Implementation to Software Implementation, Circuit Diagram to System Architecture or UML Diagrams, and Hardware Testing to Software Testing and Validation.
+- These examples are adaptation guidance, not claims that the current project contains those components or activities.
+- Never recommend hardware implementation, physical components, sensors, circuits, materials, or experiments for a software-only project unless the supplied project data explicitly establishes their relevance.
+- Do not introduce hardware merely because the uploaded template was originally written for a hardware project.
+- Do not remove relevant software engineering sections simply because they are absent from the uploaded template.
+- If the template structure conflicts with the selected document type, academic conventions, or project scope, prioritize correctness and explain the necessary structural adaptation through writing_guidelines or integrity_requirements.
+- Preserve meaningful heading numbering and hierarchy where possible, but adjust numbering consistently when sections are added, removed, or adapted.
+- Do not treat the template's example headings, captions, tables, or chapter titles as evidence that corresponding work exists in the current project.
+- Never copy project-specific paragraphs, technical claims, measurements, results, conclusions, references, author details, organization names, or acknowledgements from the template.
+- Never treat the template's extracted text, heading names, example captions, or table samples as project facts or research evidence.
+- Do not use template references as citations for the current project.
+- Template table patterns may guide the organization of newly created tables, but must not supply fabricated rows, values, measurements, or conclusions.
+- Template figure caption examples may guide caption formatting, but must not be treated as descriptions of figures belonging to the current project.
+- If the template reader reports extraction warnings, account for those limitations rather than assuming that all visual formatting or document elements were successfully extracted.
+- PDF table patterns may be unavailable even when table captions are detected. Never assume that the actual table contents were extracted.
+- Do not claim exact reproduction of fonts, margins, spacing, page layout, or pagination based solely on extracted PDF text.
+- When no template_guidance object is supplied, use the selected document type and formatting style to plan the document normally.
+- Keep template-derived structural recommendations distinguishable from project-data-derived factual content.
+
 9. DOCUMENT STRUCTURE AND ACADEMIC CONVENTIONS
 - Adapt the recommended structure to the selected document type and formatting style.
 - Distinguish among project reports, original research papers, review papers, theses, and general academic reports.

@@ -195,6 +195,7 @@ def build_section_generation_prompt(
         "existing_sections": project_data.get("sections", {}),
         "figures": project_data.get("figures", []),
         "tables": project_data.get("tables", []),
+        "template_guidance": project_data.get("template_guidance", {}),
     }
 
     section_context = {
@@ -306,6 +307,47 @@ These constraints are mandatory.
 
 
 ==================================================
+5.1 UPLOADED DOCUMENT TEMPLATE RULES
+==================================================
+
+Check the project information for a template_guidance object.
+
+If template_guidance is available, follow these rules:
+
+1. Treat the uploaded template strictly as a structural and formatting reference, never as a source of project facts or research evidence.
+
+2. Follow its relevant heading hierarchy, section organization, numbering conventions, table organization patterns, and figure-caption conventions.
+
+3. Maintain consistency with the uploaded template's academic writing structure wherever appropriate.
+
+4. Adapt template headings to the actual project domain, document type, and scope.
+
+5. For software-only projects, use appropriate software engineering terminology and sections. Do not introduce hardware implementation, physical components, circuits, sensors, or laboratory experiments merely because they appear in the template.
+
+6. Preserve relevant software-specific material even when it is absent from the uploaded template.
+
+7. Do not copy paragraphs, technical explanations, results, measurements, conclusions, references, author details, institutional details, or acknowledgements from the uploaded template.
+
+8. Never interpret example headings, captions, table patterns, or template content as evidence that the corresponding work exists in the current project.
+
+9. Use table patterns only to guide the organization of tables. Never invent project-specific table values or rows.
+
+10. Use figure caption examples only to guide caption style. Never claim that an example figure belongs to the current project.
+
+11. Do not invent page numbers, exact pagination, font settings, margins, spacing, or visual layout based only on extracted template text.
+
+12. If template extraction warnings are supplied, account for those limitations. Do not assume that unextracted tables, images, or visual formatting are available.
+
+13. If the template conflicts with project scope, factual integrity, or the selected document type, prioritize correctness and adapt the structure.
+
+14. Keep the section's technical depth appropriate to its academic purpose. Do not sacrifice meaningful explanation merely to imitate the template's paragraph lengths.
+
+15. When no template_guidance is available, follow the selected document type and formatting style normally.
+
+16. Template guidance must never override the mandatory evidence and factual-integrity constraints.
+
+==================================================
+
 6. PRIMARY WRITING OBJECTIVE
 ==================================================
 

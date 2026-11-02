@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Editor | ResearchForge</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/document-editor.css">
+</head>
+<body>
+    <main class="document-editor-page">
+        <header class="document-editor-header">
+            <a href="#" id="back-to-workspace" class="document-back-link">← Back to Workspace</a>
+            <div class="document-header-info">
+                <span class="document-editor-label">RESEARCHFORGE DOCUMENT EDITOR</span>
+                <h1 id="document-project-title">Loading document...</h1>
+                <p id="document-project-meta"></p>
+            </div>
+            <div class="document-header-actions">
+                <span id="document-save-status" role="status">Loading...</span>
+                <button type="button" id="save-document-btn">Save Changes</button>
+            </div>
+        </header>
+
+        <section class="document-editor-main">
+            <aside class="document-outline">
+                <h2>Document Contents</h2>
+                <nav id="document-outline-list"></nav>
+            </aside>
+
+            <section class="document-preview-area">
+                <div class="document-preview-toolbar">
+                    <div>
+                        <span class="document-editor-label">DOCUMENT PREVIEW</span>
+                        <h2>Review and edit your document</h2>
+                    </div>
+                    <span id="document-section-count"></span>
+                </div>
+
+                <div id="document-preview" class="document-preview">
+                    <div class="document-loading">Loading your generated document...</div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="js/document-editor.js"></script>
+</body>
+</html>
