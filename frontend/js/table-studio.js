@@ -1,4 +1,4 @@
-console.log("ResearchForge Table Studio loaded");
+﻿console.log("ResearchForge Table Studio loaded");
 
 const TABLE_STUDIO_API = "http://127.0.0.1:8000";
 const tableStudioParams = new URLSearchParams(window.location.search);
@@ -247,10 +247,54 @@ async function tableStudioLoadProject() {
                             : section.name || section.title || ""
                     )
                     .filter(Boolean);
+            } else if (
+                sections &&
+                typeof sections === "object"
+            ) {
+                tableStudioSections = Object.keys(sections);
             }
         } catch (error) {
             console.warn("Unable to load document sections:", error);
         }
+    }
+
+    if (tableStudioSections.length === 0) {
+        const defaultSections = {
+            project_report: [
+                "Introduction", "Problem Statement", "Objectives",
+                "Literature Review", "Methodology",
+                "System Design and Architecture", "Implementation",
+                "Results and Discussion", "Conclusion", "Future Scope",
+                "References", "Appendices"
+            ],
+            research_paper: [
+                "Introduction", "Related Work", "Methodology",
+                "Proposed Approach", "Experimental Setup",
+                "Results and Discussion", "Conclusion", "References"
+            ],
+            review_paper: [
+                "Introduction", "Review Scope and Methodology",
+                "Literature Classification", "Comparative Analysis",
+                "Research Gaps", "Challenges and Open Problems",
+                "Future Research Directions", "Conclusion", "References"
+            ],
+            thesis: [
+                "Introduction", "Literature Review",
+                "Research Problem and Objectives",
+                "Research Questions or Hypotheses",
+                "Research Methodology", "Results and Analysis",
+                "Discussion", "Conclusion", "Limitations",
+                "Future Scope", "References", "Appendices"
+            ],
+            academic_report: [
+                "Introduction", "Background", "Objectives",
+                "Main Content", "Analysis and Discussion",
+                "Conclusion", "Recommendations", "References",
+                "Appendices"
+            ]
+        };
+
+        tableStudioSections = defaultSections[documentType] || [];
     }
 
     tableStudioRenderSections();

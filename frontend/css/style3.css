@@ -2280,3 +2280,28 @@
     }
 }
 
+
+/* Table Studio document-section dropdown: match Figure Studio */
+.table-studio-field select {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    padding: 13px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    outline: none;
+    background: var(--color-soft);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 13px;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.table-studio-field select:focus {
+    border-color: var(--color-primary);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 4px rgba(11, 127, 133, 0.15);
+}
