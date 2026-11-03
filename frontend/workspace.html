@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -329,10 +329,19 @@
                     </p>
                 </div>
 
-                <button type="button" id="generate-document-btn" class="generate-document-btn">
-                    <span>Generate Document</span>
-                    <span aria-hidden="true">?</span>
-                </button>
+                <div class="generate-document-actions">
+                    <button type="button" id="open-document-editor-btn" class="open-document-editor-btn">
+                        <span aria-hidden="true">✎</span>
+                        <span>Open Document Editor</span>
+                        <span aria-hidden="true">→</span>
+                    </button>
+
+                    <button type="button" id="generate-document-btn" class="generate-document-btn">
+                        <span class="generate-document-btn-icon" aria-hidden="true">✦</span>
+                        <span>Generate Document</span>
+                        <span class="generate-document-btn-arrow" aria-hidden="true">→</span>
+                    </button>
+                </div>
 
                 <p id="generate-document-status" class="generate-document-status" role="status" aria-live="polite"></p>
             </div>
@@ -353,8 +362,11 @@
     <script src="js/document-body-assets.js"></script>
 
     <script src="js/generate-document.js"></script>
+    <script src="js/open-document-editor.js"></script>
 </body>
 
 </html>
+
+
 
 

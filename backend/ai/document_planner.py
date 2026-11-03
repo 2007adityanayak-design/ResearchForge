@@ -194,6 +194,220 @@ def ensure_empty_template_coverage(
         )
 
 
+
+def ensure_research_paper_structure(
+    result: dict[str, Any],
+    project_data: dict[str, Any] | None,
+) -> None:
+    """Ensure essential academic sections exist in research-paper plans."""
+
+    project_data = project_data or {}
+
+    if str(project_data.get("document_type", "")).casefold() != "research_paper":
+        return
+
+    recommendations = result.get("recommended_sections")
+
+    if not isinstance(recommendations, list):
+        return
+
+    def normalize(value: str) -> str:
+        value = value.replace("&", "and")
+        return re.sub(r"[^a-z0-9]", "", value.casefold())
+
+    aliases = {
+        "title_and_authors": {"titleandauthors", "titleauthors"},
+        "abstract": {"abstract"},
+        "keywords": {"keywords", "indexterms", "keyterms"},
+        "methodology": {
+            "methodology",
+            "researchmethodology",
+            "proposedmethodology",
+        },
+        "references": {
+            "references",
+            "reference",
+            "bibliography",
+            "referencelist",
+            "works cited",
+        },
+    }
+
+    represented = {
+        normalize(section.get("title", ""))
+        for section in recommendations
+        if isinstance(section, dict)
+        and isinstance(section.get("title"), str)
+    }
+
+    used_ids = {
+        section.get("section_id", "").strip().casefold()
+        for section in recommendations
+        if isinstance(section, dict)
+        and isinstance(section.get("section_id"), str)
+    }
+
+    required = [
+        {
+            "section_id": "title_and_authors",
+            "title": "Title and Authors",
+            "purpose": (
+                "Provide the research paper title and author information "
+                "using the project's saved name, author, institution, "
+                "department, and supervisor details. Do not invent missing "
+                "identity or affiliation information."
+            ),
+            "key_points": [
+                "Use the exact project name as the paper title.",
+                "Use only supplied author and affiliation details.",
+                "Include the department and institution when provided.",
+                "Clearly identify missing author or affiliation details instead of inventing them.",
+            ],
+            "source_fields": [
+                "name",
+                "author_name",
+                "institution",
+                "department",
+                "supervisor",
+            ],
+            "required_information": [
+                "Identify author or affiliation details that have not been supplied.",
+                "Do not invent author names, institutional affiliations, or supervisor details.",
+            ],
+            "suggested_word_count": 0,
+        },
+        {
+            "section_id": "abstract",
+            "title": "Abstract",
+            "purpose": (
+                "Summarize the research problem, objectives, proposed "
+                "approach, intended contribution, and scope. Do not invent "
+                "experimental results or claim completed validation."
+            ),
+            "key_points": [
+                "State the problem and research motivation.",
+                "Summarize the research objectives.",
+                "Describe the proposed multi-layer software framework.",
+                "State the intended contribution without claiming proven performance.",
+            ],
+            "source_fields": [
+                "name",
+                "problem_statement",
+                "research_objectives",
+                "research_notes",
+                "sections",
+            ],
+            "required_information": [
+                "Identify any missing information needed for an accurate abstract.",
+                "Do not invent results, datasets, measurements, or conclusions.",
+            ],
+            "suggested_word_count": 200,
+        },
+        {
+            "section_id": "keywords",
+            "title": "Keywords",
+            "purpose": (
+                "Provide concise academic keywords grounded in the project's "
+                "actual topic, objectives, and proposed approach."
+            ),
+            "key_points": [
+                "Use specific terms relevant to the research topic.",
+                "Represent the problem domain and proposed analysis approach.",
+                "Avoid unsupported claims or unrelated keywords.",
+            ],
+            "source_fields": [
+                "name",
+                "problem_statement",
+                "research_objectives",
+                "research_notes",
+            ],
+            "required_information": [
+                "Use only terminology supported by the supplied project information."
+            ],
+            "suggested_word_count": 30,
+        },
+        {
+            "section_id": "methodology",
+            "title": "Methodology",
+            "purpose": (
+                "Explain the proposed software-only research methodology, "
+                "system workflow, analysis layers, evaluation design, and "
+                "validation procedure. Clearly distinguish proposed work "
+                "from completed implementation or experiments."
+            ),
+            "key_points": [
+                "Describe the proposed research and system-development approach.",
+                "Explain the analysis layers and their responsibilities.",
+                "Describe data preparation and evaluation methodology where supplied.",
+                "Identify unimplemented components and planned experiments accurately.",
+            ],
+            "source_fields": [
+                "problem_statement",
+                "research_objectives",
+                "research_notes",
+                "sections",
+                "figures",
+                "tables",
+            ],
+            "required_information": [
+                "Identify methodological details that remain unspecified.",
+                "Never claim implementation, training, testing, or experiments were completed unless supported."
+            ],
+            "suggested_word_count": 900,
+        },
+        {
+            "section_id": "references",
+            "title": "References",
+            "purpose": (
+                "Present only verifiable references supplied with the project "
+                "or independently verified through an approved research "
+                "workflow. If none are available, clearly state that verified "
+                "references have not yet been supplied."
+            ),
+            "key_points": [
+                "Use authentic bibliographic details only.",
+                "Do not invent authors, titles, publication venues, years, DOIs, or URLs.",
+                "Identify the need for verified sources when no references are supplied.",
+            ],
+            "source_fields": ["references", "research_notes", "sections"],
+            "required_information": [
+                "Determine whether verified reference entries are available.",
+                "If unavailable, use an explicit placeholder rather than fabricated citations."
+            ],
+            "suggested_word_count": 0,
+        },
+    ]
+
+    added = []
+
+    for section in required:
+        accepted_names = aliases[section["section_id"]]
+
+        if represented.intersection(accepted_names):
+            continue
+
+        base_id = section["section_id"]
+        section_id = base_id
+        suffix = 2
+
+        while section_id.casefold() in used_ids:
+            section_id = f"{base_id}_{suffix}"
+            suffix += 1
+
+        section["section_id"] = section_id
+        recommendations.append(section)
+        added.append(section["title"])
+        represented.update(accepted_names)
+        represented.add(normalize(section["title"]))
+        used_ids.add(section_id.casefold())
+
+    if added:
+        print(
+            "[AI PLANNER] Added missing mandatory research-paper sections: "
+            + ", ".join(added)
+        )
+
+
 def validate_plan_structure(
     result: dict[str, Any],
     project_data: dict[str, Any] | None = None,
@@ -921,6 +1135,7 @@ PROJECT INFORMATION:
         raise ValueError("Gemini returned an unexpected document plan structure.")
 
     ensure_empty_template_coverage(result, project_data)
+    ensure_research_paper_structure(result, project_data)
     validate_plan_structure(result, project_data)
     validate_plan_assets(result, project_data)
 

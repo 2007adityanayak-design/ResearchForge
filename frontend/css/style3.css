@@ -1843,3 +1843,440 @@
         width: 100%;
     }
 }
+
+
+
+/* ResearchForge generation confirmation redesign */
+
+.generation-confirmation-overlay {
+    z-index: 1000;
+    padding: 22px;
+    background: rgba(10, 35, 39, 0.58);
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
+}
+
+.generation-confirmation-card {
+    width: min(100%, 540px);
+    max-width: 540px;
+    padding: 34px;
+    border: 1px solid var(--color-primary-border);
+    border-radius: 22px;
+    background: var(--color-surface);
+    box-shadow: 0 28px 90px rgba(10, 45, 49, 0.24);
+    animation: generation-dialog-enter 0.24s ease-out;
+}
+
+@keyframes generation-dialog-enter {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.generation-confirmation-icon {
+    width: 54px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-primary-border);
+    border-radius: 16px;
+    background: var(--color-primary-light);
+    color: var(--color-primary-hover);
+    font-size: 25px;
+    font-weight: 800;
+}
+
+.generation-confirmation-title {
+    margin: 23px 0 9px !important;
+    font-size: 25px !important;
+    line-height: 1.3;
+    letter-spacing: -0.8px !important;
+}
+
+.generation-confirmation-description {
+    color: var(--color-muted);
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.generation-confirmation-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 13px;
+    margin-top: 25px;
+}
+
+.generation-cancel-button {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-height: 43px;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.generation-cancel-button:hover {
+    color: var(--color-text);
+    background: rgba(11, 127, 133, 0.06);
+}
+
+.generation-choice-button {
+    position: relative;
+    min-width: 0;
+    min-height: 155px;
+    padding: 20px 17px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 9px;
+    border: 1px solid var(--color-border);
+    border-radius: 15px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-align: left;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease,
+        box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.generation-choice-button::before {
+    content: "?";
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(11, 127, 133, 0.09);
+    color: var(--color-primary);
+    font-size: 19px;
+}
+
+.generation-choice-recommended {
+    border: 1.5px solid var(--color-primary);
+    background: linear-gradient(
+        145deg,
+        var(--color-primary-light),
+        var(--color-surface)
+    );
+    box-shadow: inset 0 0 0 1px rgba(11, 127, 133, 0.06);
+}
+
+.generation-choice-recommended::after {
+    content: "RECOMMENDED";
+    position: absolute;
+    top: 13px;
+    right: 12px;
+    color: var(--color-primary-hover);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.7px;
+}
+
+.generation-choice-danger {
+    border-color: var(--color-border);
+}
+
+.generation-choice-danger::before {
+    content: "?";
+    background: rgba(190, 115, 55, 0.10);
+    color: #A66A32;
+}
+
+.generation-choice-button:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-primary);
+    box-shadow: 0 9px 22px rgba(11, 90, 94, 0.10);
+}
+
+.generation-choice-button:focus-visible,
+.generation-cancel-button:focus-visible {
+    outline: 3px solid var(--color-primary-soft);
+    outline-offset: 3px;
+}
+
+@media (max-width: 540px) {
+    .generation-confirmation-card {
+        padding: 25px 20px;
+        border-radius: 18px;
+    }
+
+    .generation-confirmation-title {
+        font-size: 21px !important;
+    }
+
+    .generation-confirmation-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .generation-choice-button {
+        min-height: 115px;
+    }
+
+    .generation-cancel-button {
+        grid-column: 1;
+        grid-row: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .generation-confirmation-card,
+    .generation-choice-button {
+        animation: none;
+        transition: none;
+    }
+}
+
+
+
+
+/* Simplified document generation dialog */
+
+.generation-confirmation-card {
+    max-width: 560px;
+    padding: 34px;
+}
+
+.generation-confirmation-icon,
+.generation-choice-button::before,
+.generation-choice-recommended::after {
+    display: none !important;
+}
+
+.generation-confirmation-title {
+    margin: 0 0 10px !important;
+    font-size: 24px !important;
+}
+
+.generation-confirmation-description {
+    margin-bottom: 24px;
+    line-height: 1.7;
+}
+
+.generation-confirmation-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 0;
+}
+
+.generation-choice-button {
+    min-height: 125px;
+    padding: 23px 18px;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-align: center;
+    font-size: 15px;
+    font-weight: 750;
+    box-shadow: none;
+}
+
+.generation-choice-recommended,
+.generation-choice-danger {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+.generation-choice-button:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+    box-shadow: 0 7px 18px rgba(11, 90, 94, 0.08);
+}
+
+.generation-cancel-button {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    min-height: 42px;
+    margin-top: 5px;
+    color: var(--color-muted);
+}
+
+@media (max-width: 540px) {
+    .generation-confirmation-card {
+        padding: 25px 20px;
+    }
+
+    .generation-confirmation-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .generation-choice-button {
+        min-height: 85px;
+    }
+
+    .generation-cancel-button {
+        grid-column: 1;
+    }
+}
+
+
+/* ResearchForge — Custom Formatting Template Upload */
+.project-page #template-upload-group {
+    padding: 22px;
+    border: 1px solid rgba(11, 127, 133, 0.18);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(11, 127, 133, 0.075), rgba(210, 235, 232, 0.28));
+    gap: 13px;
+}
+
+.project-page #template-upload-group > label {
+    font-size: 15px;
+    font-weight: 750;
+    color: var(--color-text);
+}
+
+.project-page #template-file {
+    width: 100%;
+    min-height: 76px;
+    padding: 17px;
+    border: 2px dashed rgba(11, 127, 133, 0.42);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--color-text);
+    font-size: 13px;
+    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    cursor: pointer;
+}
+
+.project-page #template-file:hover,
+.project-page #template-file:focus-visible {
+    border-color: #0b7f85;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(11, 127, 133, 0.09);
+    outline: none;
+}
+
+.project-page #template-file::file-selector-button {
+    margin-right: 14px;
+    padding: 11px 17px;
+    border: 0;
+    border-radius: 9px;
+    background: #0b7f85;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 750;
+    transition: background .2s ease, transform .2s ease;
+    cursor: pointer;
+}
+
+.project-page #template-file::file-selector-button:hover {
+    background: #08666b;
+    transform: translateY(-1px);
+}
+
+.project-page #template-file-name {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0;
+}
+
+.project-page #template-file-name:not(:empty) {
+    padding: 12px 14px;
+    border: 1px solid rgba(11, 127, 133, 0.2);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #176c70;
+    font-size: 13px;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+
+.project-page #template-file-name button {
+    padding: 7px 12px;
+    border: 1px solid rgba(192, 57, 43, 0.2);
+    border-radius: 8px;
+    background: rgba(192, 57, 43, 0.07);
+    color: #b33b30;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease;
+}
+
+.project-page #template-file-name button:hover {
+    background: rgba(192, 57, 43, 0.14);
+    transform: translateY(-1px);
+}
+
+.project-page #template-upload-group .input-helper {
+    color: var(--color-muted, #647777);
+}
+
+@media (max-width: 600px) {
+    .project-page #template-upload-group {
+        padding: 15px;
+    }
+
+    .project-page #template-file {
+        padding: 12px;
+    }
+}
+
+
+/* Unified boxed Back to Workspace buttons */
+.figure-studio-back,
+.table-studio-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: fit-content;
+    min-height: 44px;
+    margin: 0 0 18px;
+    padding: 10px 17px;
+    border: 1px solid rgba(11, 127, 133, 0.28);
+    border-radius: 11px;
+    background: #f0f9f7;
+    color: #087f85;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none !important;
+    box-shadow: 0 2px 7px rgba(11, 127, 133, 0.06);
+    transition: transform .2s ease, background .2s ease,
+                border-color .2s ease, box-shadow .2s ease;
+}
+
+.figure-studio-back:hover,
+.table-studio-back:hover {
+    transform: translateY(-3px);
+    background: #eaf6f4;
+    border-color: #0b858b;
+    color: #087f85;
+    box-shadow: 0 8px 18px rgba(11, 127, 133, 0.15);
+}
+
+.figure-studio-back:focus-visible,
+.table-studio-back:focus-visible {
+    outline: 3px solid rgba(11, 127, 133, 0.25);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .figure-studio-back,
+    .table-studio-back {
+        transition: none;
+    }
+}
+

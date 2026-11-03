@@ -81,3 +81,295 @@
         width: 100%;
     }
 }
+
+/* Refined final-document generation panel */
+.generate-document-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 44px;
+    row-gap: 18px;
+    padding: 36px 40px;
+    border-radius: 20px;
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #dce7e7);
+    box-shadow: 0 12px 34px rgba(20, 60, 60, 0.07);
+}
+
+.generate-document-content {
+    max-width: 720px;
+    min-width: 0;
+}
+
+.generate-document-label {
+    margin-bottom: 12px;
+    color: #0b7f85;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+}
+
+.generate-document-content h2 {
+    margin-bottom: 12px;
+    font-size: clamp(21px, 2.2vw, 27px);
+    line-height: 1.3;
+}
+
+.generate-document-content p {
+    max-width: 650px;
+    line-height: 1.8;
+}
+
+.generate-document-btn {
+    min-width: 220px;
+    min-height: 58px;
+    padding: 17px 21px;
+    gap: 13px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #0b858b, #086d73);
+    box-shadow: 0 7px 18px rgba(11, 127, 133, 0.19);
+    white-space: nowrap;
+}
+
+.generate-document-btn-icon {
+    font-size: 18px;
+}
+
+.generate-document-btn-arrow {
+    margin-left: 4px;
+    font-size: 19px;
+    transition: transform 0.2s ease;
+}
+
+.generate-document-btn:hover .generate-document-btn-arrow {
+    transform: translateX(4px);
+}
+
+.generate-document-status {
+    grid-column: 1 / -1;
+    min-height: 18px;
+    padding-top: 2px;
+}
+
+@media (max-width: 760px) {
+    .generate-document-panel {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 22px;
+        padding: 25px;
+    }
+
+    .generate-document-btn {
+        width: 100%;
+    }
+
+    .generate-document-status {
+        grid-column: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .generate-document-btn,
+    .generate-document-btn-arrow {
+        transition: none;
+    }
+}
+
+/* Prevent hover flicker on the Generate Document button */
+.generate-document-btn {
+    transform: none !important;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease !important;
+    animation: none !important;
+}
+
+.generate-document-btn:hover {
+    transform: none !important;
+    background: #086d73;
+    box-shadow: 0 5px 14px rgba(11, 127, 133, 0.16);
+}
+
+.generate-document-btn:active {
+    transform: none !important;
+}
+
+.generate-document-btn-arrow {
+    transform: none !important;
+    transition: none !important;
+}
+
+/* Final stable button state: no hover movement or animation */
+#generate-document-btn,
+#generate-document-btn:hover,
+#generate-document-btn:focus,
+#generate-document-btn:focus-visible,
+#generate-document-btn:active {
+    transform: none !important;
+    animation: none !important;
+    filter: none !important;
+    transition: none !important;
+}
+
+#generate-document-btn:hover {
+    background: #086d73 !important;
+    box-shadow: 0 5px 14px rgba(11, 127, 133, 0.16) !important;
+}
+
+#generate-document-btn *,
+#generate-document-btn:hover * {
+    pointer-events: none;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+.generate-document-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.open-document-editor-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 220px;
+    min-height: 58px;
+    padding: 17px 21px;
+    border: 1px solid #0b7f85;
+    border-radius: 13px;
+    background: transparent;
+    color: #0b7f85;
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.open-document-editor-btn:hover {
+    background: #e8f5f4;
+    color: #08696e;
+}
+
+.open-document-editor-btn:focus-visible {
+    outline: 3px solid rgba(11, 127, 133, 0.3);
+    outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+    .generate-document-actions {
+        grid-column: 1;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .open-document-editor-btn,
+    .generate-document-actions .generate-document-btn {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* ===== MATCHED WORKSPACE DOCUMENT ACTION BUTTONS ===== */
+
+.generate-document-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.generate-document-actions #open-document-editor-btn,
+.generate-document-actions #generate-document-btn {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    width: 245px;
+    min-width: 245px;
+    height: 60px;
+    min-height: 60px;
+    padding: 0 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transform: translateY(0) !important;
+    transition: transform 0.22s ease, box-shadow 0.22s ease,
+                background 0.22s ease, border-color 0.22s ease,
+                color 0.22s ease !important;
+}
+
+.generate-document-actions #open-document-editor-btn {
+    border: 1px solid #0b7f85;
+    background: #ffffff;
+    color: #087f85;
+    box-shadow: 0 4px 12px rgba(11, 127, 133, 0.08);
+}
+
+.generate-document-actions #generate-document-btn {
+    border: 1px solid #0b7f85;
+    background: linear-gradient(135deg, #0b858b, #086d73);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(11, 127, 133, 0.14);
+}
+
+.generate-document-actions #open-document-editor-btn:hover,
+.generate-document-actions #generate-document-btn:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 11px 23px rgba(11, 127, 133, 0.2) !important;
+}
+
+.generate-document-actions #open-document-editor-btn:hover {
+    background: #eaf6f4;
+    border-color: #087f85;
+    color: #06696e;
+}
+
+.generate-document-actions #generate-document-btn:hover {
+    background: #086d73 !important;
+    border-color: #086d73;
+}
+
+.generate-document-actions #open-document-editor-btn:active,
+.generate-document-actions #generate-document-btn:active {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(11, 127, 133, 0.14) !important;
+}
+
+.generate-document-actions #open-document-editor-btn:focus-visible,
+.generate-document-actions #generate-document-btn:focus-visible {
+    outline: 3px solid rgba(11, 127, 133, 0.28);
+    outline-offset: 4px;
+}
+
+@media (max-width: 760px) {
+    .generate-document-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .generate-document-actions #open-document-editor-btn,
+    .generate-document-actions #generate-document-btn {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .generate-document-actions #open-document-editor-btn,
+    .generate-document-actions #generate-document-btn {
+        transition: none !important;
+    }
+
+    .generate-document-actions #open-document-editor-btn:hover,
+    .generate-document-actions #generate-document-btn:hover {
+        transform: none !important;
+    }
+}

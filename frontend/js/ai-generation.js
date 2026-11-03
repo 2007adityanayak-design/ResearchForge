@@ -1,4 +1,116 @@
-(() => {
+﻿(() => {
+function showGenerationConfirmation(options) {
+    return new Promise(resolve => {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay active generation-confirmation-overlay";
+        overlay.setAttribute("aria-hidden", "false");
+
+        const card = document.createElement("div");
+        card.className = "modal-card generation-confirmation-card";
+        card.setAttribute("role", "dialog");
+        card.setAttribute("aria-modal", "true");
+        card.setAttribute("aria-labelledby", "generation-confirmation-title");
+
+        const icon = document.createElement("div");
+        icon.className = "modal-icon generation-confirmation-icon";
+        icon.textContent = "!";
+
+        const title = document.createElement("h2");
+        title.id = "generation-confirmation-title";
+        title.className = "generation-confirmation-title";
+        title.textContent = options.title;
+
+        const description = document.createElement("p");
+        description.textContent = options.description;
+        description.className = "generation-confirmation-description";
+
+        const actions = document.createElement("div");
+        actions.className = "modal-actions generation-confirmation-actions";
+
+        let settled = false;
+
+        function finish(value) {
+            if (settled) return;
+            settled = true;
+            document.removeEventListener("keydown", handleKeydown);
+            document.body.classList.remove("modal-open");
+            overlay.remove();
+            resolve(value);
+        }
+
+        function handleKeydown(event) {
+            if (event.key === "Escape") finish(null);
+        }
+
+        const cancelButton = document.createElement("button");
+        cancelButton.type = "button";
+        cancelButton.className = "modal-cancel-btn generation-cancel-button";
+        cancelButton.textContent = "Cancel";
+        cancelButton.addEventListener("click", () => finish(null));
+
+        actions.appendChild(cancelButton);
+
+        options.choices.forEach(choice => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `generation-choice-button ${choice.className}`;
+            button.textContent = choice.label;
+            button.addEventListener("click", () => finish(choice.value));
+            actions.appendChild(button);
+        });
+
+        card.append(title, description, actions);
+        overlay.appendChild(card);
+
+        overlay.addEventListener("click", event => {
+            if (event.target === overlay) finish(null);
+        });
+
+        document.body.appendChild(overlay);
+        document.body.classList.add("modal-open");
+        document.addEventListener("keydown", handleKeydown);
+        cancelButton.focus();
+    });
+}
+
+async function showRegenerationConfirmation(section) {
+    return (
+        await showGenerationConfirmation({
+            title: "Regenerate this section?",
+            description:
+                `Existing content in "${section}" will be replaced by newly generated content.`,
+            choices: [{
+                label: "Regenerate",
+                value: true,
+                className: "generation-choice-danger"
+            }]
+        })
+    ) === true;
+}
+
+async function showFullDocumentModeConfirmation() {
+    return showGenerationConfirmation({
+        title: "Generate your complete document",
+        description:
+            "Choose how ResearchForge should handle your existing sections. " +
+            "Filling empty sections preserves your current content. " +
+            "Regenerating all replaces existing generated content.",
+        choices: [
+            {
+                label: "Fill Empty Sections",
+                value: "fill_empty",
+                className: "generation-choice-recommended"
+            },
+            {
+                label: "Regenerate All",
+                value: "regenerate",
+                className: "generation-choice-danger"
+            }
+        ]
+    });
+}
+
+
 async function getGenerationDocumentPlan() {
     const state = window.ResearchForgeWorkspace;
     if (
@@ -211,11 +323,11 @@ async function generateCurrentDocumentSection(
 
         if (state.workspaceSaveStatus) {
             state.workspaceSaveStatus.textContent =
-                "AI-generated section saved successfully ✓";
+                "AI-generated section saved successfully âœ“";
         }
 
         generationStatus.textContent =
-            "Section generated and saved successfully ✓";
+            "Section generated and saved successfully âœ“";
 
         generationStatus.className =
             "document-section-status research-save-success";
@@ -474,9 +586,7 @@ async function generateFullDocument(
         return;
     }
 
-    const modeChoice = await showFullDocumentModeConfirmation();
-
-    if (!modeChoice) return;
+    const modeChoice = "fill_empty";
 
     const {
         saveButton,
@@ -727,712 +837,9 @@ async function generateFullDocument(
     }
 }
 
-function showFullDocumentModeConfirmation() {
-    return new Promise(resolve => {
-        if (document.getElementById("rf-full-document-modal")) {
-            return resolve(null);
-        }
-
-        if (!document.getElementById("rf-full-document-modal-styles")) {
-            const style = document.createElement("style");
-            style.id = "rf-full-document-modal-styles";
-            style.textContent = `
-                #rf-full-document-modal {
-                    position: fixed;
-                    inset: 0;
-                    z-index: 10050;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                    background: rgba(20, 30, 35, .48);
-                    backdrop-filter: blur(5px);
-                }
-
-                #rf-full-document-modal,
-                #rf-full-document-modal * {
-                    box-sizing: border-box;
-                }
-
-                #rf-full-document-modal .rf-full-dialog {
-                    width: min(100%, 590px);
-                    padding: 30px;
-                    border: 1px solid var(--color-border);
-                    border-radius: var(--radius-large, 18px);
-                    background: var(--color-surface);
-                    color: var(--color-text);
-                    box-shadow: 0 20px 65px rgba(20, 35, 40, .2);
-                    animation: rfFullModalIn .2s ease-out;
-                }
-
-                #rf-full-document-modal .rf-full-header {
-                    display: flex;
-                    align-items: center;
-                    gap: 13px;
-                    margin-bottom: 10px;
-                }
-
-                #rf-full-document-modal .rf-full-icon {
-                    display: grid;
-                    place-items: center;
-                    flex: 0 0 44px;
-                    height: 44px;
-                    border-radius: 12px;
-                    background: var(--color-primary-light, rgba(40, 145, 150, .12));
-                    color: var(--color-primary);
-                    font-size: 23px;
-                }
-
-                #rf-full-document-modal .rf-full-heading {
-                    margin: 0;
-                    font-family: var(--font-heading);
-                    font-size: clamp(21px, 4vw, 27px);
-                    font-weight: 800;
-                    line-height: 1.25;
-                }
-
-                #rf-full-document-modal .rf-full-subtitle {
-                    margin: 12px 0 24px;
-                    color: var(--color-muted);
-                    font-size: 14px;
-                    line-height: 1.65;
-                }
-
-                #rf-full-document-modal .rf-full-option {
-                    display: flex;
-                    align-items: center;
-                    gap: 16px;
-                    width: 100%;
-                    padding: 19px;
-                    margin-top: 13px;
-                    border: 1px solid var(--color-border);
-                    border-radius: 13px;
-                    background: var(--color-background, var(--color-surface));
-                    color: var(--color-text);
-                    text-align: left;
-                    cursor: pointer;
-                    transition: border-color .18s, background .18s, box-shadow .18s;
-                }
-
-                #rf-full-document-modal .rf-full-option:hover {
-                    border-color: var(--color-primary);
-                }
-
-                #rf-full-document-modal .rf-full-option.selected {
-                    border: 2px solid var(--color-primary);
-                    padding: 18px;
-                    background: var(--color-primary-light, rgba(40, 145, 150, .09));
-                    box-shadow: 0 0 0 2px rgba(40, 145, 150, .07);
-                }
-
-                #rf-full-document-modal .rf-full-radio {
-                    display: grid;
-                    place-items: center;
-                    flex: 0 0 22px;
-                    width: 22px;
-                    height: 22px;
-                    border: 2px solid var(--color-muted);
-                    border-radius: 50%;
-                }
-
-                #rf-full-document-modal .rf-full-option.selected .rf-full-radio {
-                    border-color: var(--color-primary);
-                }
-
-                #rf-full-document-modal .rf-full-radio-dot {
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 50%;
-                    background: transparent;
-                }
-
-                #rf-full-document-modal .rf-full-option.selected .rf-full-radio-dot {
-                    background: var(--color-primary);
-                }
-
-                #rf-full-document-modal .rf-full-option-content {
-                    flex: 1;
-                    min-width: 0;
-                }
-
-                #rf-full-document-modal .rf-full-option strong {
-                    display: block;
-                    margin-bottom: 6px;
-                    font-size: 15px;
-                    font-weight: 800;
-                }
-
-                #rf-full-document-modal .rf-full-option-description {
-                    display: block;
-                    color: var(--color-muted);
-                    font-size: 13px;
-                    line-height: 1.6;
-                }
-
-                #rf-full-document-modal .rf-full-option-icon {
-                    flex: 0 0 35px;
-                    color: var(--color-primary);
-                    font-size: 27px;
-                    text-align: center;
-                }
-
-                #rf-full-document-modal .rf-full-warning {
-                    display: flex;
-                    gap: 11px;
-                    align-items: flex-start;
-                    margin: 18px 0 0;
-                    padding: 13px 15px;
-                    border: 1px solid rgba(190, 145, 55, .3);
-                    border-radius: 10px;
-                    background: rgba(190, 145, 55, .09);
-                    color: var(--color-text);
-                    font-size: 12px;
-                    line-height: 1.6;
-                }
-
-                #rf-full-document-modal .rf-full-warning-icon {
-                    color: #b8872f;
-                    font-size: 18px;
-                    font-weight: 800;
-                }
-
-                #rf-full-document-modal .rf-full-actions {
-                    display: flex;
-                    justify-content: flex-end;
-                    gap: 12px;
-                    margin-top: 24px;
-                }
-
-                #rf-full-document-modal .rf-full-action {
-                    min-height: 43px;
-                    padding: 10px 20px;
-                    border: 1px solid var(--color-border);
-                    border-radius: var(--radius-small, 9px);
-                    background: transparent;
-                    color: var(--color-text);
-                    font: inherit;
-                    font-size: 14px;
-                    font-weight: 700;
-                    cursor: pointer;
-                }
-
-                #rf-full-document-modal .rf-full-continue {
-                    border-color: var(--color-primary);
-                    background: var(--color-primary);
-                    color: #fff;
-                }
-
-                #rf-full-document-modal .rf-full-action {
-                    transition: transform .2s ease, box-shadow .2s ease,
-                                background .2s ease, border-color .2s ease;
-                }
-
-                #rf-full-document-modal .rf-full-action:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 7px 16px rgba(25, 55, 65, .13);
-                }
-
-                #rf-full-document-modal .rf-full-action:active {
-                    transform: translateY(-1px) scale(.98);
-                    box-shadow: none;
-                }
-
-                #rf-full-document-modal .rf-full-continue:hover {
-                    filter: brightness(1.08);
-                }
-
-                #rf-full-document-modal .rf-full-cancel:hover {
-                    border-color: var(--color-primary);
-                    background: var(--color-primary-light, rgba(40, 145, 150, .08));
-                }
-
-                @media (prefers-reduced-motion: reduce) {
-                    #rf-full-document-modal .rf-full-action {
-                        transition: none;
-                    }
-                }
-
-                #rf-full-document-modal button:focus-visible {
-                    outline: 2px solid var(--color-primary);
-                    outline-offset: 3px;
-                }
-
-                @keyframes rfFullModalIn {
-                    from { opacity: 0; transform: translateY(9px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-
-                @media (max-width: 480px) {
-                    #rf-full-document-modal .rf-full-dialog {
-                        padding: 21px;
-                    }
-
-                    #rf-full-document-modal .rf-full-option {
-                        padding: 15px;
-                        gap: 11px;
-                    }
-
-                    #rf-full-document-modal .rf-full-option.selected {
-                        padding: 14px;
-                    }
-
-                    #rf-full-document-modal .rf-full-option-icon {
-                        display: none;
-                    }
-                }
-
-                @media (prefers-reduced-motion: reduce) {
-                    #rf-full-document-modal .rf-full-dialog {
-                        animation: none;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        let selectedMode = "fill_empty";
-
-        const overlay = document.createElement("div");
-        overlay.id = "rf-full-document-modal";
-
-        overlay.innerHTML = `
-            <div class="rf-full-dialog" role="dialog"
-                 aria-modal="true" aria-labelledby="rf-full-title"
-                 aria-describedby="rf-full-description">
-
-                <div class="rf-full-header">
-                    <div class="rf-full-icon" aria-hidden="true">?</div>
-                    <h2 class="rf-full-heading" id="rf-full-title">
-                        Generate Full Document
-                    </h2>
-                </div>
-
-                <p class="rf-full-subtitle" id="rf-full-description">
-                    Choose how ResearchForge AI should generate your document.
-                    Your current section will be saved before generation begins.
-                </p>
-
-                <button type="button"
-                        class="rf-full-option selected"
-                        data-mode="fill_empty"
-                        role="radio"
-                        aria-checked="true">
-                    <span class="rf-full-radio">
-                        <span class="rf-full-radio-dot"></span>
-                    </span>
-                    <span class="rf-full-option-content">
-                        <strong>Fill Empty Sections</strong>
-                        <span class="rf-full-option-description">
-                            Preserve existing content and generate only
-                            sections that are currently empty or missing.
-                        </span>
-                    </span>
-                    <span class="rf-full-option-icon" aria-hidden="true">?</span>
-                </button>
-
-                <button type="button"
-                        class="rf-full-option"
-                        data-mode="regenerate"
-                        role="radio"
-                        aria-checked="false">
-                    <span class="rf-full-radio">
-                        <span class="rf-full-radio-dot"></span>
-                    </span>
-                    <span class="rf-full-option-content">
-                        <strong>Regenerate Entire Document</strong>
-                        <span class="rf-full-option-description">
-                            Generate all recommended sections again,
-                            replacing their existing content.
-                        </span>
-                    </span>
-                    <span class="rf-full-option-icon" aria-hidden="true">?</span>
-                </button>
-
-                <div class="rf-full-warning">
-                    <span class="rf-full-warning-icon" aria-hidden="true">!</span>
-                    <span>
-                        <strong>Important:</strong>
-                        Regeneration replaces existing section content.
-                        Choose Fill Empty Sections to preserve your work.
-                    </span>
-                </div>
-
-                <div class="rf-full-actions">
-                    <button type="button"
-                            class="rf-full-action rf-full-cancel">
-                        Cancel
-                    </button>
-                    <button type="button"
-                            class="rf-full-action rf-full-continue">
-                        Continue
-                    </button>
-                </div>
-            </div>
-        `;
-
-        const finish = mode => {
-            overlay.remove();
-            document.removeEventListener("keydown", handleKeydown);
-            resolve(mode);
-        };
-
-        const options = [...overlay.querySelectorAll("[data-mode]")];
-
-        options.forEach(option => {
-            option.addEventListener("click", () => {
-                selectedMode = option.dataset.mode;
-
-                options.forEach(item => {
-                    const selected = item === option;
-                    item.classList.toggle("selected", selected);
-                    item.setAttribute("aria-checked", String(selected));
-                });
-            });
-        });
-
-        overlay.querySelector(".rf-full-cancel").addEventListener(
-            "click",
-            () => finish(null)
-        );
-
-        overlay.querySelector(".rf-full-continue").addEventListener(
-            "click",
-            () => finish(selectedMode)
-        );
-
-        overlay.addEventListener("click", event => {
-            if (event.target === overlay) finish(null);
-        });
-
-        const handleKeydown = event => {
-            if (event.key === "Escape") {
-                finish(null);
-            }
-
-            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                if (!options.includes(document.activeElement)) return;
-
-                event.preventDefault();
-                const current = options.indexOf(document.activeElement);
-                const next = event.key === "ArrowDown"
-                    ? (current + 1) % options.length
-                    : (current - 1 + options.length) % options.length;
-
-                options[next].focus();
-                options[next].click();
-            }
-
-            if (event.key === "Tab") {
-                const controls = [...overlay.querySelectorAll("button")];
-                const first = controls[0];
-                const last = controls[controls.length - 1];
-
-                if (event.shiftKey && document.activeElement === first) {
-                    event.preventDefault();
-                    last.focus();
-                } else if (!event.shiftKey && document.activeElement === last) {
-                    event.preventDefault();
-                    first.focus();
-                }
-            }
-        };
-
-        document.addEventListener("keydown", handleKeydown);
-        document.body.appendChild(overlay);
-        options[0].focus();
-    });
-}
-
-function showRegenerationConfirmation(section) {
-    return new Promise((resolve) => {
-        if (!document.getElementById("rf-regeneration-modal-styles")) {
-            const style = document.createElement("style");
-            style.id = "rf-regeneration-modal-styles";
-            style.textContent = `
-                .rf-modal-overlay {
-                    position: fixed;
-                    inset: 0;
-                    z-index: 99999;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                    background: rgba(3, 7, 18, 0.78);
-                    backdrop-filter: blur(9px);
-                    animation: rfModalFadeIn 0.2s ease;
-                }
-
-                .rf-modal-card {
-                    width: 100%;
-                    max-width: 440px;
-                    padding: 30px;
-                    border: 1px solid rgba(255,255,255,0.12);
-                    border-radius: 18px;
-                    background: linear-gradient(145deg, #171e2d, #0d1320);
-                    box-shadow: 0 20px 70px rgba(0,0,0,0.55),
-                                0 0 30px rgba(59,130,246,0.10);
-                    color: #f8fafc;
-                    animation: rfModalSlideIn 0.25s ease;
-                }
-
-                .rf-modal-icon {
-                    width: 48px;
-                    height: 48px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 14px;
-                    background: rgba(59,130,246,0.15);
-                    color: #60a5fa;
-                    font-size: 24px;
-                    margin-bottom: 20px;
-                }
-
-                .rf-modal-title {
-                    margin: 0 0 12px;
-                    color: #ffffff;
-                    font-size: 22px;
-                    font-weight: 700;
-                }
-
-                .rf-modal-section {
-                    color: #93c5fd;
-                    font-weight: 600;
-                    overflow-wrap: anywhere;
-                }
-
-                .rf-modal-description {
-                    margin: 14px 0 12px;
-                    color: #cbd5e1;
-                    font-size: 14px;
-                    line-height: 1.7;
-                }
-
-                .rf-modal-warning {
-                    padding: 12px 14px;
-                    margin-top: 16px;
-                    border: 1px solid rgba(245,158,11,0.2);
-                    border-radius: 10px;
-                    background: rgba(245,158,11,0.07);
-                    color: #fcd34d;
-                    font-size: 13px;
-                    line-height: 1.6;
-                }
-
-                .rf-modal-actions {
-                    display: flex;
-                    justify-content: flex-end;
-                    gap: 12px;
-                    margin-top: 26px;
-                }
-
-                .rf-modal-btn {
-                    padding: 11px 20px;
-                    border-radius: 9px;
-                    border: 1px solid transparent;
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: 0.2s ease;
-                }
-
-                .rf-modal-cancel {
-                    color: #e2e8f0;
-                    background: #263244;
-                    border-color: rgba(255,255,255,0.1);
-                }
-
-                .rf-modal-cancel:hover {
-                    background: #35445b;
-                }
-
-                .rf-modal-confirm {
-                    color: #ffffff;
-                    background: linear-gradient(135deg, #2563eb, #3b82f6);
-                    box-shadow: 0 4px 16px rgba(37,99,235,0.25);
-                }
-
-                .rf-modal-confirm:hover {
-                    transform: translateY(-1px);
-                    box-shadow: 0 6px 22px rgba(37,99,235,0.4);
-                }
-
-                .rf-modal-btn:focus-visible {
-                    outline: 2px solid #93c5fd;
-                    outline-offset: 3px;
-                }
-
-                @keyframes rfModalFadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-
-                @keyframes rfModalSlideIn {
-                    from { opacity: 0; transform: translateY(12px) scale(0.98); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
-                }
-
-                /* ResearchForge native teal theme */
-                .rf-modal-card {
-                    background: var(--color-surface, #ffffff);
-                    border: 1px solid var(--color-border, #dce3e3);
-                    border-radius: var(--radius-large, 14px);
-                    color: var(--color-text, #263238);
-                    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.22),
-                                0 0 25px rgba(11, 127, 133, 0.10);
-                }
-
-                .rf-modal-icon {
-                    background: var(--color-soft, #e8f4f4);
-                    color: var(--color-primary, #0b7f85);
-                    border: 1px solid var(--color-primary-border, #b9dddd);
-                }
-
-                .rf-modal-title {
-                    color: var(--color-heading, #172f30);
-                    font-family: var(--font-heading, inherit);
-                }
-
-                .rf-modal-section {
-                    color: var(--color-primary, #0b7f85);
-                }
-
-                .rf-modal-description {
-                    color: var(--color-text, #344b4c);
-                }
-
-                .rf-modal-warning {
-                    background: var(--color-soft, #edf7f7);
-                    border: 1px solid var(--color-primary-border, #c5e2e2);
-                    color: var(--color-text, #344b4c);
-                    border-radius: var(--radius-medium, 10px);
-                }
-
-                .rf-modal-cancel {
-                    background: var(--color-background, #f5f8f8);
-                    color: var(--color-text, #263238);
-                    border: 1px solid var(--color-border, #dce3e3);
-                    border-radius: var(--radius-small, 7px);
-                }
-
-                .rf-modal-cancel:hover {
-                    background: var(--color-soft, #e8f4f4);
-                    border-color: var(--color-primary, #0b7f85);
-                    color: var(--color-primary, #0b7f85);
-                    transform: translateY(-3px);
-                    box-shadow: 0 5px 16px rgba(11, 127, 133, 0.20);
-                }
-
-                .rf-modal-cancel:active {
-                    transform: translateY(0) scale(0.97);
-                    box-shadow: 0 2px 6px rgba(11, 127, 133, 0.12);
-                }
-
-                .rf-modal-confirm {
-                    background: var(--color-primary, #0b7f85);
-                    color: #ffffff;
-                    border: 1px solid var(--color-primary, #0b7f85);
-                    border-radius: var(--radius-small, 7px);
-                    box-shadow: 0 4px 14px rgba(11, 127, 133, 0.20);
-                }
-
-                .rf-modal-confirm:hover {
-                    background: var(--color-primary-hover, #08696e);
-                    border-color: var(--color-primary-hover, #08696e);
-                    box-shadow: 0 5px 18px rgba(11, 127, 133, 0.28);
-                }
-
-                .rf-modal-btn:focus-visible {
-                    outline: 2px solid var(--color-primary, #0b7f85);
-                    outline-offset: 3px;
-                    box-shadow: 0 0 0 4px rgba(11, 127, 133, 0.12);
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        const overlay = document.createElement("div");
-        overlay.className = "rf-modal-overlay";
-        overlay.setAttribute("role", "presentation");
-
-        const card = document.createElement("div");
-        card.className = "rf-modal-card";
-        card.setAttribute("role", "dialog");
-        card.setAttribute("aria-modal", "true");
-        card.setAttribute("aria-labelledby", "rf-modal-title");
-
-        const icon = document.createElement("div");
-        icon.className = "rf-modal-icon";
-        icon.textContent = "✦";
-
-        const title = document.createElement("h2");
-        title.id = "rf-modal-title";
-        title.className = "rf-modal-title";
-        title.textContent = "Regenerate Section?";
-
-        const sectionName = document.createElement("div");
-        sectionName.className = "rf-modal-section";
-        sectionName.textContent = section;
-
-        const description = document.createElement("p");
-        description.className = "rf-modal-description";
-        description.textContent =
-            "This section already contains content. AI will generate a new version to replace the existing text.";
-
-        const warning = document.createElement("div");
-        warning.className = "rf-modal-warning";
-        warning.textContent =
-            "Your current content will be saved before regeneration. The new AI-generated content will replace it.";
-
-        const actions = document.createElement("div");
-        actions.className = "rf-modal-actions";
-
-        const cancelButton = document.createElement("button");
-        cancelButton.type = "button";
-        cancelButton.className = "rf-modal-btn rf-modal-cancel";
-        cancelButton.textContent = "Cancel";
-
-        const confirmButton = document.createElement("button");
-        confirmButton.type = "button";
-        confirmButton.className = "rf-modal-btn rf-modal-confirm";
-        confirmButton.textContent = "Regenerate";
-
-        actions.append(cancelButton, confirmButton);
-        card.append(icon, title, sectionName, description, warning, actions);
-        overlay.appendChild(card);
-        document.body.appendChild(overlay);
-
-        let completed = false;
-
-        function close(result) {
-            if (completed) return;
-            completed = true;
-            document.removeEventListener("keydown", handleKeydown);
-            overlay.remove();
-            resolve(result);
-        }
-
-        function handleKeydown(event) {
-            if (event.key === "Escape") {
-                close(false);
-            }
-        }
-
-        cancelButton.addEventListener("click", () => close(false));
-        confirmButton.addEventListener("click", () => close(true));
-
-        overlay.addEventListener("click", (event) => {
-            if (event.target === overlay) close(false);
-        });
-
-        document.addEventListener("keydown", handleKeydown);
-        confirmButton.focus();
-    });
-}
-
     window.ResearchForgeAIGeneration = {
         generateCurrentDocumentSection,
         generateFullDocument,
-        showFullDocumentModeConfirmation
+        showFullDocumentModeConfirmation,
     };
 })();
